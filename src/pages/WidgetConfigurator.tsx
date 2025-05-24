@@ -227,6 +227,7 @@ const WidgetConfigurator = () => {
                   <WidgetEmbeddingTab 
                     config={widgetConfig.embedding} 
                     widgetId={widgetConfig.embedding.widgetId}
+                    fullConfig={widgetConfig}
                     onChange={(key, value) => handleConfigChange('embedding', key, value)} 
                   />
                 </TabsContent>
