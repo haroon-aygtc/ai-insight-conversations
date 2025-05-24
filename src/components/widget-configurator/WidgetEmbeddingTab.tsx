@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Copy, Download, ExternalLink } from 'lucide-react';
 
 interface WidgetEmbeddingTabProps {
@@ -577,7 +577,7 @@ export default function App() {
               <Checkbox 
                 id="enable-analytics" 
                 checked={enableAnalytics}
-                onCheckedChange={setEnableAnalytics}
+                onCheckedChange={(checked) => setEnableAnalytics(checked === true)}
               />
               <Label htmlFor="enable-analytics" className="text-sm">Enable user analytics</Label>
             </div>
@@ -585,7 +585,7 @@ export default function App() {
               <Checkbox 
                 id="gdpr-compliance" 
                 checked={enableGDPR}
-                onCheckedChange={setEnableGDPR}
+                onCheckedChange={(checked) => setEnableGDPR(checked === true)}
               />
               <Label htmlFor="gdpr-compliance" className="text-sm">Enable GDPR compliance features</Label>
             </div>
@@ -593,7 +593,7 @@ export default function App() {
               <Checkbox 
                 id="cookie-consent" 
                 checked={enableCookieConsent}
-                onCheckedChange={setEnableCookieConsent}
+                onCheckedChange={(checked) => setEnableCookieConsent(checked === true)}
               />
               <Label htmlFor="cookie-consent" className="text-sm">Show cookie consent message</Label>
             </div>
