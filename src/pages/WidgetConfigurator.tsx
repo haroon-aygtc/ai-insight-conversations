@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -46,6 +45,11 @@ const WidgetConfigurator = () => {
       inputPlaceholder: "Type a message...",
       chatButtonText: "Chat with us",
       headerTitle: "Chat Support",
+      enablePreChatForm: false,
+      preChatFormFields: [],
+      preChatFormRequired: false,
+      enableFeedback: false,
+      feedbackPosition: "after-bot",
     },
     embedding: {
       allowedDomains: "*",

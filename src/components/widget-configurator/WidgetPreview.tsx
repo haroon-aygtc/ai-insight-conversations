@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, Send, X, Minimize2 } from 'lucide-react';
+import { MessageSquare, Send, X, Minimize2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface WidgetConfig {
   appearance: {
@@ -27,6 +27,11 @@ interface WidgetConfig {
     inputPlaceholder: string;
     chatButtonText: string;
     headerTitle: string;
+    enablePreChatForm: boolean;
+    preChatFormFields: string[];
+    preChatFormRequired: boolean;
+    enableFeedback: boolean;
+    feedbackPosition: string;
   };
 }
 
@@ -39,20 +44,26 @@ interface Message {
   text: string;
   isBot: boolean;
   timestamp: Date;
+  feedback?: 'up' | 'down' | null;
+}
+
+interface PreChatFormData {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  message: string;
 }
 
 export const WidgetPreview: React.FC<WidgetPreviewProps> = ({ config }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: config.content.welcomeMessage,
-      isBot: true,
-      timestamp: new Date()
-    }
-  ]);
+  const [showPreChatForm, setShowPreChatForm] = useState(false);
+  const [preFormData, setPreFormData] = useState<PreChatFormData>({
+    name: '', email: '', phone: '', company: '', message: ''
+  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
 
   const handleSendMessage = () => {
@@ -105,14 +116,48 @@ export const WidgetPreview: React.FC<WidgetPreviewProps> = ({ config }) => {
     if (isOpen) {
       setIsOpen(false);
       setIsMinimized(false);
+      setShowPreChatForm(false);
     } else {
       setIsOpen(true);
       setIsMinimized(false);
+      if (config.content.enablePreChatForm && messages.length === 0) {
+        setShowPreChatForm(true);
+      } else if (messages.length === 0) {
+        setMessages([{
+          id: 1,
+          text: config.content.welcomeMessage,
+          isBot: true,
+          timestamp: new Date()
+        }]);
+      }
     }
   };
 
   const minimizeWidget = () => {
     setIsMinimized(true);
+  };
+
+  const handlePreChatSubmit = () => {
+    const requiredFields = config.content.preChatFormRequired ? config.content.preChatFormFields : [];
+    const isValid = requiredFields.length === 0 || requiredFields.every(field => preFormData[field as keyof PreChatFormData]?.trim());
+    
+    if (isValid) {
+      setShowPreChatForm(false);
+      const welcomeMsg = config.content.welcomeMessage + 
+        (preFormData.name ? ` ${preFormData.name}!` : '');
+      setMessages([{
+        id: 1,
+        text: welcomeMsg,
+        isBot: true,
+        timestamp: new Date()
+      }]);
+    }
+  };
+
+  const handleFeedback = (messageId: number, feedback: 'up' | 'down') => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, feedback } : msg
+    ));
   };
 
   const getFontFamily = (font: string) => {
@@ -169,7 +214,11 @@ export const WidgetPreview: React.FC<WidgetPreviewProps> = ({ config }) => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setMessages([{ id: 1, text: config.content.welcomeMessage, isBot: true, timestamp: new Date() }])}
+            onClick={() => {
+              setMessages([]);
+              setShowPreChatForm(false);
+              setPreFormData({ name: '', email: '', phone: '', company: '', message: '' });
+            }}
             className="text-xs"
           >
             Reset Chat
@@ -231,58 +280,129 @@ export const WidgetPreview: React.FC<WidgetPreviewProps> = ({ config }) => {
                   </div>
                 </div>
 
-                {/* Messages */}
-                <div className="h-64 p-4 bg-slate-50 overflow-y-auto flex flex-col gap-3">
-                  {messages.map((message) => (
-                    <div key={message.id} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
-                      <div 
-                        className={`max-w-[80%] rounded-lg p-3 shadow-sm ${
-                          message.isBot 
-                            ? 'bg-white text-slate-800' 
-                            : 'text-white'
-                        }`}
-                        style={!message.isBot ? { 
-                          backgroundColor: config.appearance.primaryColor 
-                        } : {}}
-                      >
-                        <p className="text-sm">{message.text}</p>
-                        <p className="text-xs opacity-60 mt-1">
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                {/* Pre-Chat Form */}
+                {showPreChatForm && (
+                  <div className="h-80 p-4 bg-slate-50 overflow-y-auto">
+                    <div className="space-y-4">
+                      <div className="text-center mb-4">
+                        <h3 className="font-medium text-slate-800">Please fill out this form</h3>
+                        <p className="text-xs text-slate-500 mt-1">Help us serve you better</p>
                       </div>
-                    </div>
-                  ))}
-                  
-                  {isTyping && (
-                    <div className="flex justify-start">
-                      <div className="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      
+                      {config.content.preChatFormFields?.map((field) => (
+                        <div key={field}>
+                          <Label className="text-xs mb-1 block capitalize">
+                            {field}
+                            {config.content.preChatFormRequired && <span className="text-red-500 ml-1">*</span>}
+                          </Label>
+                          {field === 'message' ? (
+                            <textarea 
+                              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              rows={3}
+                              value={preFormData[field as keyof PreChatFormData]}
+                              onChange={(e) => setPreFormData(prev => ({ ...prev, [field]: e.target.value }))}
+                              placeholder={`Enter your ${field}`}
+                            />
+                          ) : (
+                            <Input 
+                              className="h-8 text-xs"
+                              type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
+                              value={preFormData[field as keyof PreChatFormData]}
+                              onChange={(e) => setPreFormData(prev => ({ ...prev, [field]: e.target.value }))}
+                              placeholder={`Enter your ${field}`}
+                            />
+                          )}
                         </div>
-                      </div>
+                      ))}
+                      
+                      <Button 
+                        className="w-full h-8 text-xs mt-4"
+                        style={{ backgroundColor: config.appearance.primaryColor }}
+                        onClick={handlePreChatSubmit}
+                      >
+                        Start Chat
+                      </Button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                {/* Input */}
-                <div className="h-16 px-3 py-2 flex items-center gap-2 border-t bg-white">
-                  <Input 
-                    placeholder={config.content.inputPlaceholder}
-                    className="h-10 text-sm border-slate-200"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                  />
-                  <Button 
-                    className="h-10 w-10 p-0 rounded-full" 
-                    style={{ backgroundColor: config.appearance.primaryColor }}
-                    onClick={handleSendMessage}
-                  >
-                    <Send size={16} />
-                  </Button>
-                </div>
+                {/* Messages */}
+                {!showPreChatForm && (
+                  <>
+                    <div className="h-64 p-4 bg-slate-50 overflow-y-auto flex flex-col gap-3">
+                      {messages.map((message) => (
+                        <div key={message.id} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
+                          <div className={`max-w-[80%] rounded-lg p-3 shadow-sm ${
+                            message.isBot 
+                              ? 'bg-white text-slate-800' 
+                              : 'text-white'
+                          }`}
+                          style={!message.isBot ? { 
+                            backgroundColor: config.appearance.primaryColor 
+                          } : {}}>
+                            <p className="text-sm">{message.text}</p>
+                            <p className="text-xs opacity-60 mt-1">
+                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                            
+                            {/* Feedback buttons for bot messages */}
+                            {message.isBot && config.content.enableFeedback && config.content.feedbackPosition === 'after-bot' && (
+                              <div className="flex gap-2 mt-2 items-center">
+                                <span className="text-xs text-slate-500">Helpful?</span>
+                                <button
+                                  className={`p-1 rounded transition-colors ${
+                                    message.feedback === 'up' ? 'bg-green-100 text-green-600' : 'hover:bg-slate-100'
+                                  }`}
+                                  onClick={() => handleFeedback(message.id, 'up')}
+                                >
+                                  <ThumbsUp size={12} />
+                                </button>
+                                <button
+                                  className={`p-1 rounded transition-colors ${
+                                    message.feedback === 'down' ? 'bg-red-100 text-red-600' : 'hover:bg-slate-100'
+                                  }`}
+                                  onClick={() => handleFeedback(message.id, 'down')}
+                                >
+                                  <ThumbsDown size={12} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {isTyping && (
+                        <div className="flex justify-start">
+                          <div className="bg-white rounded-lg p-3 shadow-sm max-w-[80%]">
+                            <div className="flex gap-1">
+                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Input */}
+                    <div className="h-16 px-3 py-2 flex items-center gap-2 border-t bg-white">
+                      <Input 
+                        placeholder={config.content.inputPlaceholder}
+                        className="h-10 text-sm border-slate-200"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                      />
+                      <Button 
+                        className="h-10 w-10 p-0 rounded-full" 
+                        style={{ backgroundColor: config.appearance.primaryColor }}
+                        onClick={handleSendMessage}
+                      >
+                        <Send size={16} />
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -334,8 +454,8 @@ export const WidgetPreview: React.FC<WidgetPreviewProps> = ({ config }) => {
             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
               <div><strong>Position:</strong> {config.behavior.position}</div>
               <div><strong>Animation:</strong> {config.behavior.animation}</div>
-              <div><strong>Auto Open:</strong> {config.behavior.autoOpen}</div>
-              <div><strong>Font:</strong> {config.appearance.fontFamily}</div>
+              <div><strong>Pre-Chat:</strong> {config.content.enablePreChatForm ? 'Yes' : 'No'}</div>
+              <div><strong>Feedback:</strong> {config.content.enableFeedback ? 'Yes' : 'No'}</div>
             </div>
           </div>
         </div>
