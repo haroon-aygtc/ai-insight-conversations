@@ -6,6 +6,8 @@ import { EmbedCodeDisplay } from './embed/EmbedCodeDisplay';
 import { ConfigurationDetails } from './embed/ConfigurationDetails';
 import { PrivacySettings } from './embed/PrivacySettings';
 import { ImplementationGuide } from './embed/ImplementationGuide';
+import { WidgetTestingPlatform } from './testing/WidgetTestingPlatform';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   generateWidgetConfig, 
   generateScriptEmbed, 
@@ -30,6 +32,7 @@ export const WidgetEmbeddingTab: React.FC<WidgetEmbeddingTabProps> = ({
   fullConfig 
 }) => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("embed-code");
   const [embedType, setEmbedType] = useState("script");
   const [enableAnalytics, setEnableAnalytics] = useState(true);
   const [enableGDPR, setEnableGDPR] = useState(true);
@@ -88,43 +91,59 @@ export const WidgetEmbeddingTab: React.FC<WidgetEmbeddingTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-semibold mb-2">Production Embed Code</h3>
-        <p className="text-sm text-slate-500 mb-4">Get production-ready code to embed your widget</p>
-      </div>
-      
-      <div className="space-y-6">
-        <EmbedTypeSelector 
-          embedType={embedType}
-          onEmbedTypeChange={setEmbedType}
-        />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="embed-code">Embed Code</TabsTrigger>
+          <TabsTrigger value="testing">Testing Platform</TabsTrigger>
+        </TabsList>
 
-        <EmbedCodeDisplay
-          embedCode={embedCode}
-          embedType={embedType}
-          widgetId={widgetId}
-          onCopy={copyToClipboard}
-          onDownload={downloadAsFile}
-        />
+        <TabsContent value="embed-code" className="space-y-6 mt-6">
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Production Embed Code</h3>
+            <p className="text-sm text-slate-500 mb-4">Get production-ready code to embed your widget</p>
+          </div>
+          
+          <div className="space-y-6">
+            <EmbedTypeSelector 
+              embedType={embedType}
+              onEmbedTypeChange={setEmbedType}
+            />
 
-        <ConfigurationDetails
-          widgetId={widgetId}
-          allowedDomains={config.allowedDomains}
-          onAllowedDomainsChange={(value) => onChange('allowedDomains', value)}
-          onCopy={copyToClipboard}
-        />
+            <EmbedCodeDisplay
+              embedCode={embedCode}
+              embedType={embedType}
+              widgetId={widgetId}
+              onCopy={copyToClipboard}
+              onDownload={downloadAsFile}
+            />
 
-        <PrivacySettings
-          enableAnalytics={enableAnalytics}
-          enableGDPR={enableGDPR}
-          enableCookieConsent={enableCookieConsent}
-          onAnalyticsChange={setEnableAnalytics}
-          onGDPRChange={setEnableGDPR}
-          onCookieConsentChange={setEnableCookieConsent}
-        />
+            <ConfigurationDetails
+              widgetId={widgetId}
+              allowedDomains={config.allowedDomains}
+              onAllowedDomainsChange={(value) => onChange('allowedDomains', value)}
+              onCopy={copyToClipboard}
+            />
 
-        <ImplementationGuide />
-      </div>
+            <PrivacySettings
+              enableAnalytics={enableAnalytics}
+              enableGDPR={enableGDPR}
+              enableCookieConsent={enableCookieConsent}
+              onAnalyticsChange={(checked) => setEnableAnalytics(checked === true)}
+              onGDPRChange={(checked) => setEnableGDPR(checked === true)}
+              onCookieConsentChange={(checked) => setEnableCookieConsent(checked === true)}
+            />
+
+            <ImplementationGuide />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="testing" className="space-y-6 mt-6">
+          <WidgetTestingPlatform
+            config={fullConfig}
+            widgetId={widgetId}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
