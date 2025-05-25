@@ -1,11 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  CheckCircle,
   User,
   Mail,
   Lock,
@@ -16,15 +16,20 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { register } = useAuth();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
     password: "",
-    confirmPassword: "",
+    password_confirmation: "",
     agreeToTerms: false,
   });
 
@@ -45,12 +50,12 @@ const Register = () => {
         if (!value) return "Password is required";
         if (typeof value === "string" && value.length < 8) return "Password must be at least 8 characters";
         return false;
-      case "confirmPassword":
+      case "password_confirmation":
         if (!value) return "Please confirm your password";
         if (value !== formData.password) return "Passwords do not match";
         return false;
-      case "firstName":
-      case "lastName":
+      case "first_name":
+      case "last_name":
         if (!value || (typeof value === "string" && value.trim() === "")) return "This field is required";
         return false;
       case "agreeToTerms":
@@ -85,18 +90,31 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      setIsLoading(true);
 
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
-        console.log("Registration data:", formData);
-        // Handle registration logic here
-        window.location.href = "/dashboard";
-      }, 1500);
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { agreeToTerms, ...registrationData } = formData;
+      await register(registrationData);
+      toast({
+        title: "Registration successful",
+        description: "Welcome to AI Insights!",
+      });
+      navigate("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "An error occurred during registration",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -213,43 +231,43 @@ const Register = () => {
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="firstName" className="text-sm font-medium text-foreground">First Name</Label>
+                          <Label htmlFor="first_name" className="text-sm font-medium text-foreground">First Name</Label>
                           <div className="relative mt-1.5">
                             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
-                              id="firstName"
-                              name="firstName"
+                              id="first_name"
+                              name="first_name"
                               type="text"
                               placeholder="John"
-                              value={formData.firstName}
+                              value={formData.first_name}
                               onChange={handleInputChange}
-                              className={`pl-10 transition-colors ${errors.firstName ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
+                              className={`pl-10 transition-colors ${errors.first_name ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
                             />
                           </div>
-                          {errors.firstName && (
+                          {errors.first_name && (
                             <p className="text-destructive text-sm mt-1">
-                              {errors.firstName}
+                              {errors.first_name}
                             </p>
                           )}
                         </div>
 
                         <div>
-                          <Label htmlFor="lastName" className="text-sm font-medium text-foreground">Last Name</Label>
+                          <Label htmlFor="last_name" className="text-sm font-medium text-foreground">Last Name</Label>
                           <div className="relative mt-1.5">
                             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
-                              id="lastName"
-                              name="lastName"
+                              id="last_name"
+                              name="last_name"
                               type="text"
                               placeholder="Doe"
-                              value={formData.lastName}
+                              value={formData.last_name}
                               onChange={handleInputChange}
-                              className={`pl-10 transition-colors ${errors.lastName ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
+                              className={`pl-10 transition-colors ${errors.last_name ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
                             />
                           </div>
-                          {errors.lastName && (
+                          {errors.last_name && (
                             <p className="text-destructive text-sm mt-1">
-                              {errors.lastName}
+                              {errors.last_name}
                             </p>
                           )}
                         </div>
@@ -335,22 +353,22 @@ const Register = () => {
                         </div>
 
                         <div>
-                          <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">Confirm Password</Label>
+                          <Label htmlFor="password_confirmation" className="text-sm font-medium text-foreground">Confirm Password</Label>
                           <div className="relative mt-1.5">
                             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
-                              id="confirmPassword"
-                              name="confirmPassword"
+                              id="password_confirmation"
+                              name="password_confirmation"
                               type="password"
                               placeholder="••••••••"
-                              value={formData.confirmPassword}
+                              value={formData.password_confirmation}
                               onChange={handleInputChange}
-                              className={`pl-10 transition-colors ${errors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
+                              className={`pl-10 transition-colors ${errors.password_confirmation ? "border-destructive focus-visible:ring-destructive" : "focus-visible:ring-primary"}`}
                             />
                           </div>
-                          {errors.confirmPassword && (
+                          {errors.password_confirmation && (
                             <p className="text-destructive text-sm mt-1">
-                              {errors.confirmPassword}
+                              {errors.password_confirmation}
                             </p>
                           )}
                         </div>

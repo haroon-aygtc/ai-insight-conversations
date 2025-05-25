@@ -52,6 +52,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Natural colors based on user preferences
+				natural: {
+					primary: '#526D82',
+					secondary: '#27374D',
+					light: '#f8f9fb',
+					muted: '#f1f3f6',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

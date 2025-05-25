@@ -2,26 +2,28 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+  const { isAuthenticated, isLoading } = useAuth();
+
   useEffect(() => {
-    // Check if user is authenticated (could be expanded with actual auth check)
-    const userAuthenticated = localStorage.getItem('chatadmin-authenticated');
-    
-    if (userAuthenticated) {
+    // Don't redirect while loading
+    if (isLoading) return;
+
+    if (isAuthenticated) {
       navigate('/dashboard');
     } else {
       toast({
-        title: "Welcome to ChatAdmin",
+        title: "Welcome to AI Insights",
         description: "Please log in to access your dashboard",
       });
       navigate('/login');
     }
-  }, [navigate, toast]);
-  
+  }, [navigate, toast, isAuthenticated, isLoading]);
+
   return null;
 };
 
