@@ -1,83 +1,110 @@
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { TestEnvironmentSelector } from "./TestEnvironmentSelector";
-import { LiveEmbedPreview } from "./LiveEmbedPreview";
-import { TestScenarios } from "./TestScenarios";
-import { PerformanceMetrics } from "./PerformanceMetrics";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeviceSimulator } from "./DeviceSimulator";
+import { LiveEmbedPreview } from "./LiveEmbedPreview";
+import { PerformanceMetrics } from "./PerformanceMetrics";
+import { TestScenarios } from "./TestScenarios";
+import { TestEnvironmentSelector } from "./TestEnvironmentSelector";
+import { Button } from "@/components/ui/button";
+import { Download, Share2 } from "lucide-react";
 
-export const WidgetTestingPlatform = ({ widgetConfig }) => {
-  const [environment, setEnvironment] = useState("development");
-  const [widgetId, setWidgetId] = useState("widget_123456789");
+interface WidgetTestingPlatformProps {
+  widgetId: string;
+  config: any;
+}
+
+export const WidgetTestingPlatform = ({
+  widgetId,
+  config,
+}: WidgetTestingPlatformProps) => {
   const [activeTab, setActiveTab] = useState("preview");
+  const [environment, setEnvironment] = useState("development");
+  const [previewUrl, setPreviewUrl] = useState(
+    `https://${environment}-preview.chatadmin.com/preview/${widgetId}?t=${Date.now()}`,
+  );
+
+  const handleEnvironmentChange = (env: string) => {
+    setEnvironment(env);
+    setPreviewUrl(
+      `https://${env}-preview.chatadmin.com/preview/${widgetId}?t=${Date.now()}`,
+    );
+  };
+
+  const handleRunTest = (scenarioId: string) => {
+    console.log(`Running test scenario: ${scenarioId}`);
+    // In a real implementation, this would trigger actual test scenarios
+  };
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Widget Testing Platform</CardTitle>
-          <CardDescription>
-            Test and validate your widget configuration across different
-            environments and devices
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            defaultValue="preview"
-            value={activeTab}
-            onValueChange={setActiveTab}
-          >
-            <TabsList className="grid grid-cols-4 mb-6">
-              <TabsTrigger value="preview">Live Preview</TabsTrigger>
-              <TabsTrigger value="devices">Device Testing</TabsTrigger>
-              <TabsTrigger value="scenarios">Test Scenarios</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
-            </TabsList>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Widget Testing Platform</h2>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export Report
+          </Button>
+          <Button variant="outline" size="sm">
+            <Share2 className="h-4 w-4 mr-2" />
+            Share Results
+          </Button>
+        </div>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-1">
-                <TestEnvironmentSelector
-                  environment={environment}
-                  setEnvironment={setEnvironment}
-                  widgetId={widgetId}
-                  setWidgetId={setWidgetId}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <TabsContent value="preview" className="m-0">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader className="border-b">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsList>
+                  <TabsTrigger value="preview">Live Preview</TabsTrigger>
+                  <TabsTrigger value="devices">Device Testing</TabsTrigger>
+                  <TabsTrigger value="embed">Embed Code</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardHeader>
+            <CardContent className="p-0">
+              <TabsContent value="preview" className="m-0">
+                <div className="p-6">
                   <LiveEmbedPreview
-                    config={widgetConfig}
+                    config={config}
                     widgetId={widgetId}
                     environment={environment}
                   />
-                </TabsContent>
-
-                <TabsContent value="devices" className="m-0">
-                  <DeviceSimulator
-                    previewUrl={`https://${environment}-preview.chatadmin.com/preview/${widgetId}?t=${Date.now()}`}
+                </div>
+              </TabsContent>
+              <TabsContent value="devices" className="m-0">
+                <div className="p-6">
+                  <DeviceSimulator previewUrl={previewUrl} />
+                </div>
+              </TabsContent>
+              <TabsContent value="embed" className="m-0">
+                <div className="p-6">
+                  <LiveEmbedPreview
+                    config={config}
+                    widgetId={widgetId}
+                    environment={environment}
                   />
-                </TabsContent>
+                </div>
+              </TabsContent>
+            </CardContent>
+          </Card>
+        </div>
 
-                <TabsContent value="scenarios" className="m-0">
-                  <TestScenarios />
-                </TabsContent>
-
-                <TabsContent value="performance" className="m-0">
-                  <PerformanceMetrics />
-                </TabsContent>
-              </div>
-            </div>
-          </Tabs>
-        </CardContent>
-      </Card>
+        <div className="space-y-6">
+          <TestEnvironmentSelector
+            environment={environment}
+            onEnvironmentChange={handleEnvironmentChange}
+          />
+          <PerformanceMetrics previewUrl={previewUrl} />
+          <TestScenarios onRunTest={handleRunTest} previewUrl={previewUrl} />
+        </div>
+      </div>
     </div>
   );
 };
