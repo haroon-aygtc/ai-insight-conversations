@@ -1,7 +1,7 @@
-import React from 'react';
-import { Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import * as Icons from 'lucide-react';
+import React from "react";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import * as Icons from "lucide-react";
 
 type IconName = keyof typeof Icons;
 
@@ -11,27 +11,27 @@ interface WidgetIconSelectorProps {
 }
 
 const popularIcons: IconName[] = [
-  'MessageCircle',
-  'MessageSquare',
-  'MessagesSquare',
-  'Speech',
-  'HelpCircle',
-  'Bot',
-  'BrainCircuit',
-  'Sparkles',
-  'Zap',
-  'Lightbulb',
-  'Headphones',
-  'LifeBuoy',
-  'Heart',
-  'ThumbsUp',
-  'Rocket',
-  'Star'
+  "MessageCircle",
+  "MessageSquare",
+  "MessagesSquare",
+  "Speech",
+  "HelpCircle",
+  "Bot",
+  "BrainCircuit",
+  "Sparkles",
+  "Zap",
+  "Lightbulb",
+  "Headphones",
+  "LifeBuoy",
+  "Heart",
+  "ThumbsUp",
+  "Rocket",
+  "Star",
 ];
 
 const WidgetIconSelector: React.FC<WidgetIconSelectorProps> = ({
   selectedIcon,
-  onIconChange
+  onIconChange,
 }) => {
   return (
     <div className="space-y-3">
@@ -44,7 +44,9 @@ const WidgetIconSelector: React.FC<WidgetIconSelectorProps> = ({
               key={iconName}
               className={cn(
                 "flex flex-col items-center justify-center p-2 rounded-md border cursor-pointer transition-all hover:border-primary",
-                selectedIcon === iconName ? "border-primary bg-primary/5" : "border-border"
+                selectedIcon === iconName
+                  ? "border-primary bg-primary/5"
+                  : "border-border",
               )}
               onClick={() => onIconChange(iconName)}
             >
@@ -57,7 +59,7 @@ const WidgetIconSelector: React.FC<WidgetIconSelectorProps> = ({
                 )}
               </div>
               <span className="text-[10px] mt-1 text-center text-muted-foreground">
-                {iconName.replace(/([A-Z])/g, ' $1').trim()}
+                {iconName.replace(/([A-Z])/g, " $1").trim()}
               </span>
             </div>
           );

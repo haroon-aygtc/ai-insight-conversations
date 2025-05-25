@@ -6,75 +6,105 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Laptop, Server, Globe } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
+
+interface TestEnvironmentSelectorProps {
+  environment: string;
+  onEnvironmentChange: (env: string) => void;
+}
 
 export const TestEnvironmentSelector = ({
   environment,
-  setEnvironment,
-  widgetId,
-  setWidgetId,
-}) => {
+  onEnvironmentChange,
+}: TestEnvironmentSelectorProps) => {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Test Environment</CardTitle>
         <CardDescription>Select where to test your widget</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <Label htmlFor="environment">Environment</Label>
-          <Select value={environment} onValueChange={setEnvironment}>
-            <SelectTrigger id="environment" className="w-full">
-              <SelectValue placeholder="Select environment" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="development">
-                <div className="flex items-center">
-                  <Laptop className="mr-2 h-4 w-4" />
-                  <span>Development</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="staging">
-                <div className="flex items-center">
-                  <Server className="mr-2 h-4 w-4" />
-                  <span>Staging</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="production">
-                <div className="flex items-center">
-                  <Globe className="mr-2 h-4 w-4" />
-                  <span>Production</span>
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="widgetId">Widget ID</Label>
-          <div className="flex space-x-2">
-            <Input
-              id="widgetId"
-              value={widgetId}
-              onChange={(e) => setWidgetId(e.target.value)}
-              placeholder="Enter widget ID"
-            />
-            <Button variant="outline">Generate</Button>
+      <CardContent>
+        <RadioGroup
+          value={environment}
+          onValueChange={onEnvironmentChange}
+          className="space-y-3"
+        >
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50">
+            <RadioGroupItem value="development" id="env-dev" />
+            <div className="flex-1">
+              <div className="flex items-center">
+                <Label htmlFor="env-dev" className="font-medium">
+                  Development
+                </Label>
+                <Badge className="ml-2 bg-blue-500">Local</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Test on your local development server
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            This is the unique identifier for your widget instance
-          </p>
-        </div>
+
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50">
+            <RadioGroupItem value="staging" id="env-staging" />
+            <div className="flex-1">
+              <div className="flex items-center">
+                <Label htmlFor="env-staging" className="font-medium">
+                  Staging
+                </Label>
+                <Badge className="ml-2 bg-amber-500">Test</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Test on the staging environment
+              </p>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-slate-400" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Requires staging credentials</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50">
+            <RadioGroupItem value="production" id="env-prod" />
+            <div className="flex-1">
+              <div className="flex items-center">
+                <Label htmlFor="env-prod" className="font-medium">
+                  Production
+                </Label>
+                <Badge className="ml-2 bg-red-500">Live</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Test on the production environment
+              </p>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-slate-400" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">
+                    Use with caution - affects live users
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </RadioGroup>
       </CardContent>
     </Card>
   );

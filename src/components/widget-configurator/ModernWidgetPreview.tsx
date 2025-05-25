@@ -1,19 +1,33 @@
-import React, { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { MessageSquare, X, Maximize2, Minimize2, Send, User, Bot } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from "react";
+import { cn } from "@/lib/utils";
+import {
+  MessageSquare,
+  X,
+  Maximize2,
+  Minimize2,
+  Send,
+  User,
+  Bot,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ModernWidgetPreviewProps {
   config: any;
 }
 
-const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => {
+const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
+  config,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([
-    { type: 'bot', content: config.content.welcomeMessage, timestamp: new Date() }
+    {
+      type: "bot",
+      content: config.content.welcomeMessage,
+      timestamp: new Date(),
+    },
   ]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const toggleWidget = () => {
     setIsOpen(!isOpen);
@@ -32,19 +46,23 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
     if (!inputValue.trim()) return;
 
     // Add user message
-    const newMessages = [...messages, { type: 'user', content: inputValue, timestamp: new Date() }];
+    const newMessages = [
+      ...messages,
+      { type: "user", content: inputValue, timestamp: new Date() },
+    ];
     setMessages(newMessages);
-    setInputValue('');
+    setInputValue("");
 
     // Simulate bot response after a delay
     setTimeout(() => {
       setMessages([
         ...newMessages,
-        { 
-          type: 'bot', 
-          content: 'Thank you for your message! How else can I assist you today?', 
-          timestamp: new Date() 
-        }
+        {
+          type: "bot",
+          content:
+            "Thank you for your message! How else can I assist you today?",
+          timestamp: new Date(),
+        },
       ]);
     }, 1000);
   };
@@ -54,23 +72,25 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
   const secondaryColor = config.appearance.secondaryColor;
   const borderRadius = `${config.appearance.borderRadius}px`;
   const iconSize = `${config.appearance.chatIconSize}px`;
-  const fontFamily = config.appearance.fontFamily || 'system-ui';
+  const fontFamily = config.appearance.fontFamily || "system-ui";
 
   // Position classes
-  const positionClasses = {
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4',
-  }[config.behavior.position] || 'bottom-right';
+  const positionClasses =
+    {
+      "bottom-right": "bottom-4 right-4",
+      "bottom-left": "bottom-4 left-4",
+      "top-right": "top-4 right-4",
+      "top-left": "top-4 left-4",
+    }[config.behavior.position] || "bottom-right";
 
   // Animation classes
-  const animationClasses = {
-    'fade': 'transition-opacity duration-300',
-    'slide': 'transition-transform duration-300',
-    'bounce': 'animate-bounce',
-    'none': '',
-  }[config.behavior.animation] || 'fade';
+  const animationClasses =
+    {
+      fade: "transition-opacity duration-300",
+      slide: "transition-transform duration-300",
+      bounce: "animate-bounce",
+      none: "",
+    }[config.behavior.animation] || "fade";
 
   return (
     <div className="relative w-full h-[500px] bg-slate-50 rounded-lg border overflow-hidden">
@@ -81,7 +101,7 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
         <div className="w-3 h-3 rounded-full bg-green-400"></div>
         <div className="ml-4 h-5 w-64 bg-white rounded-md"></div>
       </div>
-      
+
       {/* Mock website content */}
       <div className="p-4 h-[calc(100%-2rem)] relative">
         <div className="w-full h-12 bg-white rounded-md shadow-sm mb-4"></div>
@@ -93,68 +113,75 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
         <div className="w-full h-64 bg-white rounded-md shadow-sm mb-4"></div>
         <div className="w-3/4 h-8 bg-white rounded-md shadow-sm mb-4"></div>
         <div className="w-full h-32 bg-white rounded-md shadow-sm"></div>
-        
+
         {/* Widget button */}
-        <div 
+        <div
           className={cn(
             "absolute shadow-lg cursor-pointer",
             positionClasses,
-            animationClasses
+            animationClasses,
           )}
           onClick={toggleWidget}
-          style={{ 
+          style={{
             fontFamily,
-            zIndex: 999
+            zIndex: 999,
           }}
         >
           {!isOpen ? (
-            <div 
+            <div
               className="rounded-full flex items-center justify-center p-3 text-white"
-              style={{ 
+              style={{
                 backgroundColor: primaryColor,
                 width: iconSize,
                 height: iconSize,
-                borderRadius: config.appearance.theme === 'modern' ? '12px' : '50%'
+                borderRadius:
+                  config.appearance.theme === "modern" ? "12px" : "50%",
               }}
             >
               <MessageSquare size={parseInt(iconSize) * 0.5} />
             </div>
           ) : (
-            <div 
+            <div
               className={cn(
                 "bg-white rounded-lg shadow-lg overflow-hidden flex flex-col",
-                isExpanded ? "fixed inset-4 h-auto" : "w-80 h-96"
+                isExpanded ? "fixed inset-4 h-auto" : "w-80 h-96",
               )}
-              style={{ 
+              style={{
                 borderRadius,
-                border: `1px solid ${primaryColor}20`
+                border: `1px solid ${primaryColor}20`,
               }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div 
+              <div
                 className="p-4 flex items-center justify-between"
                 style={{ backgroundColor: primaryColor }}
               >
                 <div className="flex items-center gap-2">
-                  {config.appearance.theme === 'modern' && (
+                  {config.appearance.theme === "modern" && (
                     <div className="bg-white bg-opacity-20 p-1.5 rounded">
                       <MessageSquare size={16} className="text-white" />
                     </div>
                   )}
                   <div>
-                    <h3 className="font-medium text-sm text-white">{config.content.headerTitle}</h3>
+                    <h3 className="font-medium text-sm text-white">
+                      {config.content.headerTitle}
+                    </h3>
                     <p className="text-xs text-white text-opacity-80">Online</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button 
+                  <button
                     onClick={toggleExpand}
                     className="p-1 rounded-full hover:bg-white hover:bg-opacity-10 text-white"
                   >
-                    {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                    {isExpanded ? (
+                      <Minimize2 size={14} />
+                    ) : (
+                      <Maximize2 size={14} />
+                    )}
                   </button>
-                  <button 
+                  <button
                     onClick={toggleWidget}
                     className="p-1 rounded-full hover:bg-white hover:bg-opacity-10 text-white"
                   >
@@ -162,20 +189,20 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
                   </button>
                 </div>
               </div>
-              
+
               {/* Chat area */}
               <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
                 {messages.map((message, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className={cn(
                       "mb-4 max-w-[80%]",
-                      message.type === 'user' ? "ml-auto" : "mr-auto"
+                      message.type === "user" ? "ml-auto" : "mr-auto",
                     )}
                   >
                     <div className="flex items-start gap-2">
-                      {message.type === 'bot' && config.content.showAvatar && (
-                        <div 
+                      {message.type === "bot" && config.content.showAvatar && (
+                        <div
                           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: `${primaryColor}20` }}
                         >
@@ -183,22 +210,29 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
                         </div>
                       )}
                       <div>
-                        <div 
+                        <div
                           className={cn(
                             "rounded-lg p-3",
-                            message.type === 'user' 
-                              ? "bg-primary text-white" 
-                              : "bg-white border"
+                            message.type === "user"
+                              ? "bg-primary text-white"
+                              : "bg-white border",
                           )}
-                          style={message.type === 'user' ? { backgroundColor: primaryColor } : {}}
+                          style={
+                            message.type === "user"
+                              ? { backgroundColor: primaryColor }
+                              : {}
+                          }
                         >
                           <p className="text-sm">{message.content}</p>
                         </div>
                         <p className="text-xs text-slate-500 mt-1">
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {message.timestamp.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
-                      {message.type === 'user' && config.content.showAvatar && (
+                      {message.type === "user" && config.content.showAvatar && (
                         <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center flex-shrink-0">
                           <User size={16} className="text-slate-600" />
                         </div>
@@ -206,19 +240,26 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Typing indicator */}
-                {config.content.showTypingIndicator && messages[messages.length - 1]?.type === 'user' && (
-                  <div className="flex items-center gap-1 mb-4">
-                    <div className="w-2 h-2 rounded-full bg-slate-300 animate-bounce"></div>
-                    <div className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                  </div>
-                )}
+                {config.content.showTypingIndicator &&
+                  messages[messages.length - 1]?.type === "user" && (
+                    <div className="flex items-center gap-1 mb-4">
+                      <div className="w-2 h-2 rounded-full bg-slate-300 animate-bounce"></div>
+                      <div
+                        className="w-2 h-2 rounded-full bg-slate-300 animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 rounded-full bg-slate-300 animate-bounce"
+                        style={{ animationDelay: "0.4s" }}
+                      ></div>
+                    </div>
+                  )}
               </div>
-              
+
               {/* Input area */}
-              <form 
+              <form
                 className="p-3 border-t bg-white flex items-center gap-2"
                 onSubmit={handleSendMessage}
               >
@@ -228,9 +269,12 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
                   placeholder={config.content.inputPlaceholder}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  style={{ borderColor: `${primaryColor}40`, focusRing: primaryColor }}
+                  style={{
+                    borderColor: `${primaryColor}40`,
+                    focusRing: primaryColor,
+                  }}
                 />
-                <button 
+                <button
                   type="submit"
                   className="p-2 rounded-full text-white flex-shrink-0"
                   style={{ backgroundColor: primaryColor }}
@@ -238,11 +282,13 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({ config }) => 
                   <Send size={16} />
                 </button>
               </form>
-              
+
               {/* Branding */}
-              {config.appearance.theme === 'modern' && (
+              {config.appearance.theme === "modern" && (
                 <div className="py-1 px-3 bg-slate-50 border-t text-center">
-                  <p className="text-[10px] text-slate-400">Powered by ChatAdmin</p>
+                  <p className="text-[10px] text-slate-400">
+                    Powered by ChatAdmin
+                  </p>
                 </div>
               )}
             </div>
