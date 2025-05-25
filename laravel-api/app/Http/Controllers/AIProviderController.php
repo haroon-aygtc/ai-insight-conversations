@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Facades\AI;
+use App\Models\AIProvider;
+use App\Models\AIModel;
 use App\Services\AI\Exceptions\AIProviderException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +20,14 @@ class AIProviderController extends Controller
      */
     public function index(): JsonResponse
     {
+        // First check if we have providers in the database
+        $dbProviders = AIProvider::with('models')->get();
+        
+        if ($dbProviders->isNotEmpty()) {
+            return response()->json(['providers' => $dbProviders]);
+        }
+        
+        // Fall back to config-based providers if no database records exist
         $providers = Config::get('ai.providers', []);
 
         $result = [];
@@ -43,6 +53,15 @@ class AIProviderController extends Controller
      */
     public function show(string $id): JsonResponse
     {
+        // First try to find the provider in the database
+        if (is_numeric($id)) {
+            $dbProvider = AIProvider::with('models')->find($id);
+            if ($dbProvider) {
+                return response()->json(['provider' => $dbProvider]);
+            }
+        }
+        
+        // Fall back to config-based provider
         $provider = Config::get("ai.providers.{$id}");
 
         if (!$provider) {
@@ -71,33 +90,50 @@ class AIProviderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
+            'key' => 'required|string|unique:ai_providers,key',
             'type' => 'required|string',
             'enabled' => 'boolean',
-            'models' => 'array',
+            'is_default' => 'boolean',
             'configuration' => 'array',
+            'icon_color' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 422);
         }
 
-        // In a real implementation, this would update the config file or database
-        // For this demo, we'll just return the provided data with an ID
+        // If this provider is set as default, unset any other default providers
+        if ($request->input('is_default', false)) {
+            AIProvider::where('is_default', true)->update(['is_default' => false]);
+        }
 
-        $id = strtolower($request->input('type'));
-        $result = [
-            'id' => $id,
+        $provider = AIProvider::create([
             'name' => $request->input('name'),
-            'key' => $id,
+            'key' => $request->input('key'),
             'type' => $request->input('type'),
             'enabled' => $request->input('enabled', true),
-            'isDefault' => false,
-            'models' => $request->input('models', []),
-            'iconColor' => $this->getProviderColor($id),
-            'configuration' => $this->filterSensitiveData($request->input('configuration', [])),
-        ];
+            'is_default' => $request->input('is_default', false),
+            'configuration' => $request->input('configuration', []),
+            'icon_color' => $request->input('icon_color', $this->getProviderColor($request->input('type'))),
+        ]);
 
-        return response()->json(['provider' => $result], 201);
+        // Create models if provided
+        if ($request->has('models') && is_array($request->input('models'))) {
+            foreach ($request->input('models') as $modelData) {
+                if (isset($modelData['name'])) {
+                    $provider->models()->create([
+                        'name' => $modelData['name'],
+                        'enabled' => $modelData['enabled'] ?? true,
+                        'max_tokens' => $modelData['max_tokens'] ?? 1024,
+                        'temperature' => $modelData['temperature'] ?? 0.7,
+                        'is_default' => $modelData['is_default'] ?? false,
+                        'capabilities' => $modelData['capabilities'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        return response()->json(['provider' => $provider->load('models')], 201);
     }
 
     /**
@@ -105,6 +141,40 @@ class AIProviderController extends Controller
      */
     public function update(Request $request, string $id): JsonResponse
     {
+        // First try to find the provider in the database
+        $dbProvider = null;
+        if (is_numeric($id)) {
+            $dbProvider = AIProvider::find($id);
+        } else {
+            $dbProvider = AIProvider::where('key', $id)->first();
+        }
+        
+        if ($dbProvider) {
+            $validator = Validator::make($request->all(), [
+                'name' => 'string',
+                'key' => 'string|unique:ai_providers,key,' . $dbProvider->id,
+                'type' => 'string',
+                'enabled' => 'boolean',
+                'is_default' => 'boolean',
+                'configuration' => 'array',
+                'icon_color' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 422);
+            }
+
+            // If this provider is set as default, unset any other default providers
+            if ($request->input('is_default', false) && !$dbProvider->is_default) {
+                AIProvider::where('is_default', true)->update(['is_default' => false]);
+            }
+
+            $dbProvider->update($request->all());
+            
+            return response()->json(['provider' => $dbProvider->fresh()->load('models')]);
+        }
+        
+        // Fall back to config-based provider
         $provider = Config::get("ai.providers.{$id}");
 
         if (!$provider) {
@@ -145,6 +215,20 @@ class AIProviderController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
+        // First try to find the provider in the database
+        $dbProvider = null;
+        if (is_numeric($id)) {
+            $dbProvider = AIProvider::find($id);
+        } else {
+            $dbProvider = AIProvider::where('key', $id)->first();
+        }
+        
+        if ($dbProvider) {
+            $dbProvider->delete();
+            return response()->json(['message' => 'Provider deleted successfully']);
+        }
+        
+        // Fall back to config-based provider
         $provider = Config::get("ai.providers.{$id}");
 
         if (!$provider) {
@@ -162,6 +246,26 @@ class AIProviderController extends Controller
      */
     public function setDefault(string $id): JsonResponse
     {
+        // First try to find the provider in the database
+        $dbProvider = null;
+        if (is_numeric($id)) {
+            $dbProvider = AIProvider::find($id);
+        } else {
+            $dbProvider = AIProvider::where('key', $id)->first();
+        }
+        
+        if ($dbProvider) {
+            // Unset any other default providers
+            AIProvider::where('is_default', true)->update(['is_default' => false]);
+            
+            // Set this provider as default
+            $dbProvider->is_default = true;
+            $dbProvider->save();
+            
+            return response()->json(['provider' => $dbProvider->fresh()->load('models')]);
+        }
+        
+        // Fall back to config-based provider
         $provider = Config::get("ai.providers.{$id}");
 
         if (!$provider) {
@@ -223,6 +327,20 @@ class AIProviderController extends Controller
      */
     public function getModels(string $id): JsonResponse
     {
+        // First try to find the provider in the database
+        $dbProvider = null;
+        if (is_numeric($id)) {
+            $dbProvider = AIProvider::find($id);
+        } else {
+            $dbProvider = AIProvider::where('key', $id)->first();
+        }
+        
+        if ($dbProvider) {
+            $models = $dbProvider->models;
+            return response()->json(['models' => $models]);
+        }
+        
+        // Fall back to config-based provider
         $provider = Config::get("ai.providers.{$id}");
 
         if (!$provider) {
@@ -239,6 +357,56 @@ class AIProviderController extends Controller
      */
     public function updateModel(Request $request, string $providerId, string $modelId): JsonResponse
     {
+        // First try to find the provider in the database
+        $dbProvider = null;
+        if (is_numeric($providerId)) {
+            $dbProvider = AIProvider::find($providerId);
+        } else {
+            $dbProvider = AIProvider::where('key', $providerId)->first();
+        }
+        
+        if ($dbProvider) {
+            $model = null;
+            if (is_numeric($modelId)) {
+                $model = AIModel::where('id', $modelId)
+                    ->where('ai_provider_id', $dbProvider->id)
+                    ->first();
+            } else {
+                $model = AIModel::where('name', $modelId)
+                    ->where('ai_provider_id', $dbProvider->id)
+                    ->first();
+            }
+            
+            if (!$model) {
+                return response()->json(['error' => 'Model not found'], 404);
+            }
+            
+            $validator = Validator::make($request->all(), [
+                'name' => 'string',
+                'enabled' => 'boolean',
+                'max_tokens' => 'integer|min:1',
+                'temperature' => 'numeric|min:0|max:1',
+                'is_default' => 'boolean',
+                'capabilities' => 'array',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()], 422);
+            }
+            
+            // If this model is set as default, unset any other default models for this provider
+            if ($request->input('is_default', false) && !$model->is_default) {
+                AIModel::where('ai_provider_id', $dbProvider->id)
+                    ->where('is_default', true)
+                    ->update(['is_default' => false]);
+            }
+            
+            $model->update($request->all());
+            
+            return response()->json(['model' => $model->fresh()]);
+        }
+        
+        // Fall back to config-based provider
         $provider = Config::get("ai.providers.{$providerId}");
 
         if (!$provider) {

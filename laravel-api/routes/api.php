@@ -67,5 +67,39 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{id}/models', [AIProviderController::class, 'getModels']);
             Route::put('/{providerId}/models/{modelId}', [AIProviderController::class, 'updateModel']);
         });
+        
+        // AI Model Management
+        Route::prefix('models')->group(function () {
+            Route::get('/', [AIModelController::class, 'index']);
+            Route::post('/', [AIModelController::class, 'store']);
+            Route::get('/{id}', [AIModelController::class, 'show']);
+            Route::put('/{id}', [AIModelController::class, 'update']);
+            Route::delete('/{id}', [AIModelController::class, 'destroy']);
+            Route::post('/{id}/default', [AIModelController::class, 'setDefault']);
+            Route::post('/{id}/test', [AIModelController::class, 'testModel']);
+            Route::get('/provider/{providerId}', [AIModelController::class, 'getProviderModels']);
+        });
+        
+        // AI Configuration Management
+        Route::prefix('config')->group(function () {
+            Route::get('/', [AIConfigController::class, 'index']);
+            Route::put('/', [AIConfigController::class, 'update']);
+            Route::get('/fallbacks', [AIConfigController::class, 'getFallbacks']);
+            Route::put('/fallbacks', [AIConfigController::class, 'updateFallbacks']);
+            Route::get('/cache', [AIConfigController::class, 'getCache']);
+            Route::put('/cache', [AIConfigController::class, 'updateCache']);
+            Route::get('/rate-limits', [AIConfigController::class, 'getRateLimits']);
+            Route::put('/rate-limits', [AIConfigController::class, 'updateRateLimits']);
+        });
+        
+        // AI Prompt Template Management
+        Route::prefix('prompts')->group(function () {
+            Route::get('/', [AIPromptTemplateController::class, 'index']);
+            Route::post('/', [AIPromptTemplateController::class, 'store']);
+            Route::get('/{id}', [AIPromptTemplateController::class, 'show']);
+            Route::put('/{id}', [AIPromptTemplateController::class, 'update']);
+            Route::delete('/{id}', [AIPromptTemplateController::class, 'destroy']);
+            Route::post('/{id}/render', [AIPromptTemplateController::class, 'render']);
+        });
     });
 });
