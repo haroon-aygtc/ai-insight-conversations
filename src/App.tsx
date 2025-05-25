@@ -21,6 +21,9 @@ import AiModule from "./components/ai-module/AiModule";
 import Templates from "./pages/Templates";
 import AIHub from "./pages/AIHub";
 import AIModelManager from "./pages/AIModelManager";
+import Users from "./pages/Users";
+import Roles from "./pages/Roles";
+import Permissions from "./pages/Permissions";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 
@@ -162,7 +165,6 @@ const App = () => (
                   }
                 />
 
-
                 <Route
                   path="/context-rules"
                   element={
@@ -198,13 +200,37 @@ const App = () => (
                 <Route
                   path="/users"
                   element={
-                    <MainLayout>
-                      <AnimatedRoute>
-                        <div className="p-4">
-                          <h1 className="text-2xl font-bold">Users Page</h1>
-                        </div>
-                      </AnimatedRoute>
-                    </MainLayout>
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <Users />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/roles"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <Roles />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/permissions"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <Permissions />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
                   }
                 />
                 <Route
