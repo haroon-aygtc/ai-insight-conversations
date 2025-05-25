@@ -15,8 +15,10 @@ import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
 import WidgetConfigurator from "./pages/WidgetConfigurator";
 import ContextRules from "./pages/ContextRules";
+import AiModule from "./components/ai-module/AiModule";
 import Templates from "./pages/Templates";
 import AIHub from "./pages/AIHub";
+import AIModelManager from "./pages/AIModelManager";
 import NotFound from "./pages/NotFound";
 
 // Import Tempo routes
@@ -117,6 +119,30 @@ const App = () => (
                   </MainLayout>
                 }
               />
+
+              <Route
+                path="/ai-module"
+                element={
+                  <MainLayout>
+                    <AnimatedRoute>
+                      <AiModule />
+                    </AnimatedRoute>
+                  </MainLayout>
+                }
+              />    
+
+              <Route
+                path="/ai-model-manager"
+                element={
+                  <MainLayout>
+                    <AnimatedRoute>
+                      <AIModelManager />
+                    </AnimatedRoute>
+                  </MainLayout>
+                }
+              />
+
+
               <Route
                 path="/context-rules"
                 element={

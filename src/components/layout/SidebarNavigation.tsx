@@ -10,7 +10,8 @@ import {
   Box, 
   Database, 
   Users, 
-  Bell 
+  Bell,
+  BrainCircuit
 } from 'lucide-react';
 import { 
   SidebarGroup, 
@@ -53,6 +54,17 @@ export const SidebarNavigation = () => {
       label: "Templates", 
       path: "/templates", 
       icon: <Box size={20} /> 
+    },
+    
+    { 
+      label: "AI Module", 
+      path: "/ai-module", 
+      icon: <Database size={20} /> 
+    },
+    { 
+      label: "AI Model Manager", 
+      path: "/ai-model-manager", 
+      icon: <Database size={20} /> 
     },
     { 
       label: "AI Hub", 
