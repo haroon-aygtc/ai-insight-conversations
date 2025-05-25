@@ -12,6 +12,8 @@ import {
   Bell,
   BrainCircuit,
   Shield,
+  Cloud,
+  Sparkles,
 } from "lucide-react";
 import {
   SidebarGroup,
@@ -64,12 +66,17 @@ export const SidebarNavigation = () => {
     {
       label: "AI Model Manager",
       path: "/ai-model-manager",
-      icon: <Database size={20} />,
+      icon: <BrainCircuit size={20} />,
+    },
+    {
+      label: "AI Provider Manager",
+      path: "/ai-provider-manager",
+      icon: <Cloud size={20} />,
     },
     {
       label: "AI Hub",
       path: "/ai-hub",
-      icon: <Database size={20} />,
+      icon: <Sparkles size={20} />,
     },
     {
       label: "Users",

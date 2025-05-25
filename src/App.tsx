@@ -21,6 +21,7 @@ import AiModule from "./components/ai-module/AiModule";
 import Templates from "./pages/Templates";
 import AIHub from "./pages/AIHub";
 import AIModelManager from "./pages/AIModelManager";
+import AIProviderManager from "./pages/AIProviderManager";
 import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Permissions from "./pages/Permissions";
@@ -191,6 +192,17 @@ const App = () => (
                     <MainLayout>
                       <AnimatedRoute>
                         <AIHub />
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+
+                <Route
+                  path="/ai-provider-manager"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <AIProviderManager />
                       </AnimatedRoute>
                     </MainLayout>
                   }

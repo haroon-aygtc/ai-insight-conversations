@@ -2,14 +2,26 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
+    "keywords": [
+        "framework",
+        "laravel"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.1",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.2",
-        "laravel/tinker": "^2.8"
+        "laravel/tinker": "^2.8",
+        "openai-php/client": "^0.7.8",
+        "google/cloud-ai-platform": "^0.28.0",
+        "google/apiclient": "^2.15.0",
+        "anthropic/anthropic-php": "^1.1",
+        "tectalic/openai": "^1.5",
+        "orhanerday/open-ai": "^4.8",
+        "huggingface/tokenizers": "^0.3.0",
+        "probablydeekin/openrouter-api-php": "^1.0",
+        "deepseek-ai/deepseek-php": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

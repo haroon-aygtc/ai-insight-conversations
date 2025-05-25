@@ -3,6 +3,8 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AIController;
+use App\Http\Controllers\AIProviderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,5 +45,27 @@ Route::middleware('auth:sanctum')->group(function () {
     // Legacy user route for backward compatibility
     Route::get('/user', function (Request $request) {
         return $request->user();
+    });
+
+    // AI routes
+    Route::prefix('ai')->group(function () {
+        Route::get('/providers', [AIController::class, 'getProviders']);
+        Route::post('/text', [AIController::class, 'generateText']);
+        Route::post('/chat', [AIController::class, 'generateChat']);
+        Route::post('/image', [AIController::class, 'generateImage']);
+        Route::post('/embeddings', [AIController::class, 'generateEmbeddings']);
+
+        // AI Provider Management
+        Route::prefix('providers')->group(function () {
+            Route::get('/', [AIProviderController::class, 'index']);
+            Route::post('/', [AIProviderController::class, 'store']);
+            Route::get('/{id}', [AIProviderController::class, 'show']);
+            Route::put('/{id}', [AIProviderController::class, 'update']);
+            Route::delete('/{id}', [AIProviderController::class, 'destroy']);
+            Route::post('/{id}/default', [AIProviderController::class, 'setDefault']);
+            Route::post('/{id}/test-connection', [AIProviderController::class, 'testConnection']);
+            Route::get('/{id}/models', [AIProviderController::class, 'getModels']);
+            Route::put('/{providerId}/models/{modelId}', [AIProviderController::class, 'updateModel']);
+        });
     });
 });
