@@ -10,7 +10,8 @@ import {
   Box, 
   Database, 
   Users, 
-  Bell 
+  Bell,
+  TestTube
 } from 'lucide-react';
 import { 
   SidebarGroup, 
@@ -43,6 +44,11 @@ export const SidebarNavigation = () => {
       label: "Widget Configurator", 
       path: "/widget-configurator", 
       icon: <PanelLeft size={20} /> 
+    },
+    { 
+      label: "Widget Testing", 
+      path: "/widget-testing", 
+      icon: <TestTube size={20} /> 
     },
     { 
       label: "Context Rules", 

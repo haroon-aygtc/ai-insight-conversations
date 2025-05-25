@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
 import WidgetConfigurator from "./pages/WidgetConfigurator";
+import WidgetTesting from "./pages/WidgetTesting";
 import ContextRules from "./pages/ContextRules";
 import Templates from "./pages/Templates";
 import AIHub from "./pages/AIHub";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
           <Route path="/chat" element={<MainLayout><Chat /></MainLayout>} />
           <Route path="/widget-configurator" element={<MainLayout><WidgetConfigurator /></MainLayout>} />
+          <Route path="/widget-testing" element={<MainLayout><WidgetTesting /></MainLayout>} />
           <Route path="/context-rules" element={<MainLayout><ContextRules /></MainLayout>} />
           <Route path="/templates" element={<MainLayout><Templates /></MainLayout>} />
           <Route path="/ai-hub" element={<MainLayout><AIHub /></MainLayout>} />
