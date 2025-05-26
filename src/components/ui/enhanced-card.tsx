@@ -1,8 +1,9 @@
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { motion, HTMLMotionProps } from "framer-motion";
 
-interface EnhancedCardProps extends Omit<HTMLMotionProps<"div">, "onDrag"> {
+interface EnhancedCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onDrag"> {
   variant?: "default" | "elevated" | "glass" | "gradient" | "bordered";
   hover?: boolean;
   interactive?: boolean;
@@ -35,7 +36,7 @@ const EnhancedCard = React.forwardRef<HTMLDivElement, EnhancedCardProps>(
           whileHover={{ y: -4, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          {...props}
+          {...(props as any)}
         >
           {children}
         </motion.div>

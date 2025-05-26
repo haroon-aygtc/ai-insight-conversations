@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,13 +7,28 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Eye, Settings, Palette, MessageSquare, Code, BarChart3, Play } from "lucide-react";
+import { 
+  Save, 
+  Eye, 
+  Settings, 
+  Palette, 
+  MessageSquare, 
+  Code, 
+  BarChart3, 
+  Play, 
+  Pause,
+  Download,
+  ChevronRight,
+  Layers
+} from "lucide-react";
 import WidgetAppearanceTab from "@/components/widget-configurator/WidgetAppearanceTab";
 import WidgetBehaviorTab from "@/components/widget-configurator/WidgetBehaviorTab";
 import WidgetContentTab from "@/components/widget-configurator/WidgetContentTab";
 import WidgetEmbeddingTab from "@/components/widget-configurator/WidgetEmbeddingTab";
 import ModernWidgetPreview from "@/components/widget-configurator/ModernWidgetPreview";
+import { WidgetTestingPlatform } from "@/components/widget-configurator/testing/WidgetTestingPlatform";
 import * as widgetService from "@/services/widgetService";
 
 // Define local Widget interface if needed
@@ -236,7 +252,7 @@ const WidgetConfigurator = () => {
     
     setLoading(true);
     try {
-      const widgetData = await widgetService.getWidget(id) as Widget;
+      const widgetData = await widgetService.getWidget(id);
       
       // Additional validation to ensure we got valid data back
       if (!widgetData || !widgetData.id) {
@@ -303,6 +319,54 @@ const WidgetConfigurator = () => {
     setPreviewUpdateTrigger(prev => prev + 1);
   }, [config]);
 
+  // Function to load form templates asynchronously
+  const loadFormTemplate = async (formType: 'preChatForm' | 'postChatForm' | 'feedback') => {
+    try {
+      // Show loading toast
+      toast({
+        title: "Loading Template",
+        description: `Loading default ${formType === 'preChatForm' ? 'pre-chat' : formType === 'postChatForm' ? 'post-chat' : 'feedback'} form template...`,
+      });
+      
+      // Get current widget config as WidgetData
+      const currentConfig: widgetService.WidgetData = {
+        name: config.name,
+        description: config.description,
+        appearance_config: config.appearance_config,
+        behavior_config: config.behavior_config,
+        content_config: config.content_config,
+        embedding_config: config.embedding_config,
+      };
+      
+      // Load default form template
+      const updatedConfig = await widgetService.loadDefaultFormTemplate(
+        currentConfig,
+        formType
+      );
+      
+      // Update widget config with template data
+      setConfig(prev => ({
+        ...prev,
+        content_config: {
+          ...prev.content_config,
+          ...updatedConfig.content_config
+        }
+      }));
+      
+      toast({
+        title: "Template Loaded",
+        description: `Default ${formType === 'preChatForm' ? 'pre-chat' : formType === 'postChatForm' ? 'post-chat' : 'feedback'} form template has been loaded.`,
+      });
+    } catch (error) {
+      console.error(`Error loading form template for ${formType}:`, error);
+      toast({
+        title: "Template Error",
+        description: "Could not load the default template. You can still configure the form manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleConfigChange = useCallback((section, key, value) => {
     // First update the config with the new value
     setConfig((prev) => ({
@@ -315,117 +379,13 @@ const WidgetConfigurator = () => {
     
     // If we're enabling a form feature, load the default template
     if (section === 'content' && value === true) {
-      try {
-        // Handle form template loading for different form types
-        if (key === 'enablePreChatForm') {
-          // Show loading toast
-          toast({
-            title: "Loading Template",
-            description: "Loading default pre-chat form template...",
-          });
-          
-          // Get current widget config as WidgetData
-          const currentConfig: widgetService.WidgetData = {
-            name: config.name,
-            description: config.description,
-            appearance_config: config.appearance_config,
-            behavior_config: config.behavior_config,
-            content_config: config.content_config,
-            embedding_config: config.embedding_config,
-          };
-          
-          // Load default pre-chat form template
-          const updatedConfig = await widgetService.loadDefaultFormTemplate(
-            currentConfig,
-            'preChatForm'
-          );
-          
-          // Update widget config with template data
-          setConfig(prev => ({
-            ...prev,
-            content_config: updatedConfig.content_config || prev.content_config
-          }));
-          
-          toast({
-            title: "Template Loaded",
-            description: "Default pre-chat form template has been loaded.",
-          });
-        } 
-        else if (key === 'enablePostChatForm') {
-          // Show loading toast
-          toast({
-            title: "Loading Template",
-            description: "Loading default post-chat form template...",
-          });
-          
-          // Get current widget config as WidgetData
-          const currentConfig: widgetService.WidgetData = {
-            name: config.name,
-            description: config.description,
-            appearance_config: config.appearance_config,
-            behavior_config: config.behavior_config,
-            content_config: config.content_config,
-            embedding_config: config.embedding_config,
-          };
-          
-          // Load default post-chat form template
-          const updatedConfig = await widgetService.loadDefaultFormTemplate(
-            currentConfig,
-            'postChatForm'
-          );
-          
-          // Update widget config with template data
-          setConfig(prev => ({
-            ...prev,
-            content_config: updatedConfig.content_config || prev.content_config
-          }));
-          
-          toast({
-            title: "Template Loaded",
-            description: "Default post-chat form template has been loaded.",
-          });
-        } 
-        else if (key === 'enableFeedback') {
-          // Show loading toast
-          toast({
-            title: "Loading Template",
-            description: "Loading default feedback form template...",
-          });
-          
-          // Get current widget config as WidgetData
-          const currentConfig: widgetService.WidgetData = {
-            name: config.name,
-            description: config.description,
-            appearance_config: config.appearance_config,
-            behavior_config: config.behavior_config,
-            content_config: config.content_config,
-            embedding_config: config.embedding_config,
-          };
-          
-          // Load default feedback form template
-          const updatedConfig = await widgetService.loadDefaultFormTemplate(
-            currentConfig,
-            'feedback'
-          );
-          
-          // Update widget config with template data
-          setConfig(prev => ({
-            ...prev,
-            content_config: updatedConfig.content_config || prev.content_config
-          }));
-          
-          toast({
-            title: "Template Loaded",
-            description: "Default feedback form template has been loaded.",
-          });
-        }
-      } catch (error) {
-        console.error(`Error loading form template for ${key}:`, error);
-        toast({
-          title: "Template Error",
-          description: "Could not load the default template. You can still configure the form manually.",
-          variant: "destructive",
-        });
+      // Handle form template loading for different form types
+      if (key === 'enablePreChatForm') {
+        loadFormTemplate('preChatForm');
+      } else if (key === 'enablePostChatForm') {
+        loadFormTemplate('postChatForm');
+      } else if (key === 'enableFeedback') {
+        loadFormTemplate('feedback');
       }
     }
   }, [config]);

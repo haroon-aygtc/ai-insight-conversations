@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 
 interface Message {
@@ -58,12 +59,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <>
-      <style>{`
-        @keyframes typingAnimation {
-          0%, 60%, 100% { transform: translateY(0); }
-          30% { transform: translateY(-4px); }
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+          }
+        `}
+      </style>
       
       <div className="chat-interface" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div 
