@@ -64,33 +64,327 @@ const AnimatedRoute = ({ children }: { children: React.ReactNode }) => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Protected routes with MainLayout */}
-          <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
-          <Route path="/chat" element={<MainLayout><Chat /></MainLayout>} />
-          <Route path="/widget-configurator" element={<MainLayout><WidgetConfigurator /></MainLayout>} />
-          <Route path="/context-rules" element={<MainLayout><ContextRules /></MainLayout>} />
-          <Route path="/templates" element={<MainLayout><Templates /></MainLayout>} />
-          <Route path="/ai-hub" element={<MainLayout><AIHub /></MainLayout>} />
-          
-          {/* Additional routes would go here */}
-          <Route path="/users" element={<MainLayout><div className="p-4"><h1 className="text-2xl font-bold">Users Page</h1></div></MainLayout>} />
-          <Route path="/notifications" element={<MainLayout><div className="p-4"><h1 className="text-2xl font-bold">Notifications Page</h1></div></MainLayout>} />
-          <Route path="/settings" element={<MainLayout><div className="p-4"><h1 className="text-2xl font-bold">Settings Page</h1></div></MainLayout>} />
-          
-          {/* Catch-all route for 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider defaultTheme="system" storageKey="chatadmin-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            {/* Tempo routes component - only renders when VITE_TEMPO is true */}
+            <TempoRoutes />
+
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <AnimatedRoute>
+                      <Index />
+                    </AnimatedRoute>
+                  }
+                />
+                <Route
+                  path="/login"
+                  element={
+                    <AnimatedRoute>
+                      <Login />
+                    </AnimatedRoute>
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    <AnimatedRoute>
+                      <Register />
+                    </AnimatedRoute>
+                  }
+                />
+
+                {/* Unauthorized route */}
+                <Route
+                  path="/unauthorized"
+                  element={
+                    <AnimatedRoute>
+                      <Unauthorized />
+                    </AnimatedRoute>
+                  }
+                />
+
+                {/* Protected routes with MainLayout */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <Dashboard />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/chat"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <Chat />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/widget-configurator"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetConfigurator />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widgets"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetListing />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widgets/new"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetConfigurator />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widgets/edit/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetConfigurator />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widgets/preview/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetPreview />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/widget-testing"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetTesting />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/widget-testing/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetTesting />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widget-testing-demo"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetTestingDemo />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/ai-module"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <AiModule />
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+
+                <Route
+                  path="/ai-model-manager"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <AIModelManager />
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+
+                <Route
+                  path="/context-rules"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <ContextRules />
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+                <Route
+                  path="/templates"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <Templates />
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+                <Route
+                  path="/ai-hub"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <AIHub />
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+
+                <Route
+                  path="/ai-provider-manager"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <AIProviderManager />
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+
+                {/* Additional routes would go here */}
+                <Route
+                  path="/users"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <Users />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/roles"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <Roles />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/permissions"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <Permissions />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/notifications"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <div className="p-4">
+                          <h1 className="text-2xl font-bold">
+                            Notifications Page
+                          </h1>
+                        </div>
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <MainLayout>
+                      <AnimatedRoute>
+                        <div className="p-4">
+                          <h1 className="text-2xl font-bold">Settings Page</h1>
+                        </div>
+                      </AnimatedRoute>
+                    </MainLayout>
+                  }
+                />
+
+                {/* Allow Tempo to capture routes before the catch-all */}
+                {import.meta.env.VITE_TEMPO && <Route path="/tempobook/*" />}
+
+                {/* Catch-all route for 404 */}
+                <Route
+                  path="*"
+                  element={
+                    <AnimatedRoute>
+                      <NotFound />
+                    </AnimatedRoute>
+                  }
+                />
+              </Routes>
+            </AnimatePresence>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
