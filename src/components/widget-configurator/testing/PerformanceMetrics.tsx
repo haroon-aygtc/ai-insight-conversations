@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -10,12 +11,14 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
+type MetricStatus = "good" | "warning" | "critical";
+
 interface MetricProps {
   label: string;
   value: number;
   max: number;
   unit: string;
-  status: "good" | "warning" | "critical";
+  status: MetricStatus;
 }
 
 const Metric = ({ label, value, max, unit, status }: MetricProps) => {
@@ -66,10 +69,10 @@ const Metric = ({ label, value, max, unit, status }: MetricProps) => {
 
 export const PerformanceMetrics = ({ previewUrl }: { previewUrl?: string }) => {
   const [metrics, setMetrics] = useState({
-    loadTime: { value: 0, max: 2000, status: "good" as const },
-    renderTime: { value: 0, max: 100, status: "good" as const },
-    memoryUsage: { value: 0, max: 50, status: "good" as const },
-    networkRequests: { value: 0, max: 10, status: "good" as const },
+    loadTime: { value: 0, max: 2000, status: "good" as MetricStatus },
+    renderTime: { value: 0, max: 100, status: "good" as MetricStatus },
+    memoryUsage: { value: 0, max: 50, status: "good" as MetricStatus },
+    networkRequests: { value: 0, max: 10, status: "good" as MetricStatus },
   });
 
   useEffect(() => {
@@ -86,34 +89,22 @@ export const PerformanceMetrics = ({ previewUrl }: { previewUrl?: string }) => {
         loadTime: {
           value: loadTime,
           max: 2000,
-          status:
-            loadTime < 800 ? "good" : loadTime < 1500 ? "warning" : "critical",
+          status: loadTime < 800 ? "good" : loadTime < 1500 ? "warning" : "critical",
         },
         renderTime: {
           value: renderTime,
           max: 100,
-          status:
-            renderTime < 30 ? "good" : renderTime < 70 ? "warning" : "critical",
+          status: renderTime < 30 ? "good" : renderTime < 70 ? "warning" : "critical",
         },
         memoryUsage: {
           value: memoryUsage,
           max: 50,
-          status:
-            memoryUsage < 20
-              ? "good"
-              : memoryUsage < 40
-                ? "warning"
-                : "critical",
+          status: memoryUsage < 20 ? "good" : memoryUsage < 40 ? "warning" : "critical",
         },
         networkRequests: {
           value: networkRequests,
           max: 10,
-          status:
-            networkRequests < 5
-              ? "good"
-              : networkRequests < 8
-                ? "warning"
-                : "critical",
+          status: networkRequests < 5 ? "good" : networkRequests < 8 ? "warning" : "critical",
         },
       });
     }

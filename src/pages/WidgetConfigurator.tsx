@@ -1,97 +1,35 @@
-import React, { useState, useEffect } from "react";
-import { Widget, WidgetData } from "@/services/widgetService";
-
-// Define local Widget interface if needed
-interface LocalWidget {
-  id: string | number;
-  widget_id: string;
-  name: string;
-  description: string;
-  is_active: boolean;
-  is_published: boolean;
-  status: string;
-  appearance_config: {
-    primaryColor: string;
-    secondaryColor: string;
-    borderRadius: number;
-    chatIconSize: number;
-    fontFamily: string;
-    fontSize: string;
-    fontWeight: string;
-    textColor: string;
-    headerTextColor: string;
-    theme: string;
-    iconStyle: string;
-    customCSS: string;
-    [key: string]: any;
-  };
-  behavior_config: {
-    autoOpen: string;
-    delay: number;
-    position: string;
-    animation: string;
-    mobileBehavior: string;
-    showAfterPageViews: number;
-    persistState: boolean;
-    showNotifications: boolean;
-    [key: string]: any;
-  };
-  content_config: {
-    welcomeMessage: string;
-    botName: string;
-    inputPlaceholder: string;
-    chatButtonText: string;
-    headerTitle: string;
-    enablePreChatForm: boolean;
-    preChatFormFields: Array<any>;
-    preChatFormTitle: string;
-    preChatFormSubtitle: string;
-    enableFeedback: boolean;
-    feedbackPosition: string;
-    feedbackOptions: Array<any>;
-    showTypingIndicator: boolean;
-    showAvatar: boolean;
-    [key: string]: any;
-  };
-  embedding_config: {
-    allowedDomains: string;
-    enableAnalytics: boolean;
-    gdprCompliance: boolean;
-    widgetId?: string;
-    [key: string]: any;
-  };
-  [key: string]: any;
-}
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import React, { useState, useCallback, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import {
-  MessageSquare,
-  Send,
-  ChevronRight,
-  Download,
-  Settings,
-  Layers,
-  Code,
-  BarChart,
-  Save,
-  Play,
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Save, 
+  Eye, 
+  Settings, 
+  Palette, 
+  MessageSquare, 
+  Code, 
+  BarChart3, 
+  Play, 
   Pause,
+  Download,
+  ChevronRight,
+  Layers
 } from "lucide-react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { WidgetAppearanceTab } from "@/components/widget-configurator/WidgetAppearanceTab";
 import { WidgetBehaviorTab } from "@/components/widget-configurator/WidgetBehaviorTab";
 import { WidgetContentTab } from "@/components/widget-configurator/WidgetContentTab";
 import { WidgetEmbeddingTab } from "@/components/widget-configurator/WidgetEmbeddingTab";
-import { WidgetPreview } from "@/components/widget-configurator/WidgetPreview";
+import ModernWidgetPreview from "@/components/widget-configurator/ModernWidgetPreview";
 import { WidgetTestingPlatform } from "@/components/widget-configurator/testing/WidgetTestingPlatform";
-import { useToast } from "@/components/ui/use-toast";
-import { useParams, useNavigate } from "react-router-dom";
-import { widgetService } from "@/services/widgetService";
+import * as widgetService from "@/services/widgetService";
 
 const WidgetConfigurator = () => {
   const { toast } = useToast();
@@ -103,8 +41,7 @@ const WidgetConfigurator = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Widget configuration state
-  const [widgetConfig, setWidgetConfig] = useState({
+  const [config, setConfig] = useState({
     id: null,
     widget_id: null,
     name: "New Widget",
@@ -182,22 +119,11 @@ const WidgetConfigurator = () => {
     },
   });
 
-  // Track if we're in the middle of saving a widget
   const [isSaving, setIsSaving] = useState(false);
-  
-  // Track if we've just successfully saved a widget and are navigating
   const [justSaved, setJustSaved] = useState(false);
-  
-  // Track the last successfully saved widget ID to prevent unnecessary reloads
   const [lastSavedId, setLastSavedId] = useState<string | null>(null);
-  
-  // Load widget data if editing an existing widget
+
   useEffect(() => {
-    // Skip this check in the following cases:
-    // 1. If we're in the process of saving a widget
-    // 2. If we're on the new widget page
-    // 3. If we've just successfully saved a widget and are navigating
-    // 4. If the current widgetId matches the last successfully saved ID
     if (isSaving || 
         window.location.pathname === '/widgets/new' || 
         justSaved || 
@@ -205,41 +131,12 @@ const WidgetConfigurator = () => {
       return;
     }
     
-    // Only load if widgetId is a valid string (not undefined, null, or empty)
     if (widgetId && typeof widgetId === 'string' && widgetId.trim() !== '') {
       loadWidget(widgetId);
-    } else if (widgetId === undefined && 
-              window.location.pathname.includes('/widgets/') && 
-              window.location.pathname !== '/widgets/new') {
-      
-      // Store the current path to check if navigation occurs during the timeout
-      const currentPath = window.location.pathname;
-      
-      // If we're on a widget edit page but the ID is undefined, show an error
-      // Add a longer delay to ensure this isn't a transient state during navigation
-      const timeoutId = setTimeout(() => {
-        // Only show the error and redirect if we're still on the same path
-        // This prevents the error from showing during navigation
-        if (window.location.pathname === currentPath && !justSaved) {
-          toast({
-            title: "Invalid Widget ID",
-            description: "No widget ID was provided. Creating a new widget instead.",
-            variant: "destructive",
-          });
-          
-          // Redirect to new widget page
-          navigate('/widgets/new');
-        }
-      }, 500); // Increased timeout to give more time for navigation to complete
-      
-      // Clean up timeout if component unmounts or dependencies change
-      return () => clearTimeout(timeoutId);
     }
   }, [widgetId, navigate, isSaving, justSaved, lastSavedId]);
 
-  // Load widget data from the API
   const loadWidget = async (id: string) => {
-    // Validate the ID before making the API call
     if (!id || id === 'undefined' || id === 'null') {
       toast({
         title: "Invalid Widget ID",
@@ -252,14 +149,13 @@ const WidgetConfigurator = () => {
     
     setLoading(true);
     try {
-      const widgetData = await widgetService.getWidget(id) as Widget;
+      const widgetData = await widgetService.getWidget(id);
       
-      // Additional validation to ensure we got valid data back
       if (!widgetData || !widgetData.id) {
         throw new Error('Received invalid widget data from server');
       }
       
-      setWidgetConfig({
+      setConfig({
         id: widgetData.id,
         widget_id: widgetData.widget_id,
         name: widgetData.name,
@@ -283,29 +179,12 @@ const WidgetConfigurator = () => {
     } catch (error) {
       console.error("Error loading widget:", error);
       
-      // Check if it's a 404 Not Found error
-      if (error.response && error.response.status === 404) {
-        toast({
-          title: "Widget Not Found",
-          description: "The widget you're trying to access doesn't exist or has been deleted.",
-          variant: "destructive",
-        });
-        
-        // Redirect to widget list or new widget page after a short delay
-        setTimeout(() => {
-          navigate('/widgets/new');
-        }, 1500);
-        return;
-      }
-      
-      // Handle other errors
       toast({
         title: "Error",
-        description: error.message || "Failed to load widget configuration. Please try again.",
+        description: "Failed to load widget configuration. Please try again.",
         variant: "destructive",
       });
       
-      // Redirect to new widget page for any error
       setTimeout(() => {
         navigate('/widgets/new');
       }, 1500);
@@ -314,14 +193,55 @@ const WidgetConfigurator = () => {
     }
   };
 
-  // Force preview update when configuration changes
   useEffect(() => {
     setPreviewUpdateTrigger(prev => prev + 1);
-  }, [widgetConfig]);
+  }, [config]);
 
-  const handleConfigChange = async (section, key, value) => {
-    // First update the config with the new value
-    setWidgetConfig((prev) => ({
+  const loadFormTemplate = async (formType: 'preChatForm' | 'postChatForm' | 'feedback') => {
+    try {
+      toast({
+        title: "Loading Template",
+        description: `Loading default ${formType === 'preChatForm' ? 'pre-chat' : formType === 'postChatForm' ? 'post-chat' : 'feedback'} form template...`,
+      });
+      
+      const currentConfig: widgetService.WidgetData = {
+        name: config.name,
+        description: config.description,
+        appearance_config: config.appearance_config,
+        behavior_config: config.behavior_config,
+        content_config: config.content_config,
+        embedding_config: config.embedding_config,
+      };
+      
+      const updatedConfig = await widgetService.loadDefaultFormTemplate(
+        currentConfig,
+        formType
+      );
+      
+      setConfig(prev => ({
+        ...prev,
+        content_config: {
+          ...prev.content_config,
+          ...updatedConfig.content_config
+        }
+      }));
+      
+      toast({
+        title: "Template Loaded",
+        description: `Default ${formType === 'preChatForm' ? 'pre-chat' : formType === 'postChatForm' ? 'post-chat' : 'feedback'} form template has been loaded.`,
+      });
+    } catch (error) {
+      console.error(`Error loading form template for ${formType}:`, error);
+      toast({
+        title: "Template Error",
+        description: "Could not load the default template. You can still configure the form manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleConfigChange = useCallback((section, key, value) => {
+    setConfig((prev) => ({
       ...prev,
       [`${section}_config`]: {
         ...prev[`${section}_config`],
@@ -329,164 +249,46 @@ const WidgetConfigurator = () => {
       },
     }));
     
-    // If we're enabling a form feature, load the default template
     if (section === 'content' && value === true) {
-      try {
-        // Handle form template loading for different form types
-        if (key === 'enablePreChatForm') {
-          // Show loading toast
-          toast({
-            title: "Loading Template",
-            description: "Loading default pre-chat form template...",
-          });
-          
-          // Get current widget config as WidgetData
-          const currentConfig: widgetService.WidgetData = {
-            name: widgetConfig.name,
-            description: widgetConfig.description,
-            appearance_config: widgetConfig.appearance_config,
-            behavior_config: widgetConfig.behavior_config,
-            content_config: widgetConfig.content_config,
-            embedding_config: widgetConfig.embedding_config,
-          };
-          
-          // Load default pre-chat form template
-          const updatedConfig = await widgetService.loadDefaultFormTemplate(
-            currentConfig,
-            'preChatForm'
-          );
-          
-          // Update widget config with template data
-          setWidgetConfig(prev => ({
-            ...prev,
-            content_config: updatedConfig.content_config || prev.content_config
-          }));
-          
-          toast({
-            title: "Template Loaded",
-            description: "Default pre-chat form template has been loaded.",
-          });
-        } 
-        else if (key === 'enablePostChatForm') {
-          // Show loading toast
-          toast({
-            title: "Loading Template",
-            description: "Loading default post-chat form template...",
-          });
-          
-          // Get current widget config as WidgetData
-          const currentConfig: widgetService.WidgetData = {
-            name: widgetConfig.name,
-            description: widgetConfig.description,
-            appearance_config: widgetConfig.appearance_config,
-            behavior_config: widgetConfig.behavior_config,
-            content_config: widgetConfig.content_config,
-            embedding_config: widgetConfig.embedding_config,
-          };
-          
-          // Load default post-chat form template
-          const updatedConfig = await widgetService.loadDefaultFormTemplate(
-            currentConfig,
-            'postChatForm'
-          );
-          
-          // Update widget config with template data
-          setWidgetConfig(prev => ({
-            ...prev,
-            content_config: updatedConfig.content_config || prev.content_config
-          }));
-          
-          toast({
-            title: "Template Loaded",
-            description: "Default post-chat form template has been loaded.",
-          });
-        } 
-        else if (key === 'enableFeedback') {
-          // Show loading toast
-          toast({
-            title: "Loading Template",
-            description: "Loading default feedback form template...",
-          });
-          
-          // Get current widget config as WidgetData
-          const currentConfig: widgetService.WidgetData = {
-            name: widgetConfig.name,
-            description: widgetConfig.description,
-            appearance_config: widgetConfig.appearance_config,
-            behavior_config: widgetConfig.behavior_config,
-            content_config: widgetConfig.content_config,
-            embedding_config: widgetConfig.embedding_config,
-          };
-          
-          // Load default feedback form template
-          const updatedConfig = await widgetService.loadDefaultFormTemplate(
-            currentConfig,
-            'feedback'
-          );
-          
-          // Update widget config with template data
-          setWidgetConfig(prev => ({
-            ...prev,
-            content_config: updatedConfig.content_config || prev.content_config
-          }));
-          
-          toast({
-            title: "Template Loaded",
-            description: "Default feedback form template has been loaded.",
-          });
-        }
-      } catch (error) {
-        console.error(`Error loading form template for ${key}:`, error);
-        toast({
-          title: "Template Error",
-          description: "Could not load the default template. You can still configure the form manually.",
-          variant: "destructive",
-        });
+      if (key === 'enablePreChatForm') {
+        loadFormTemplate('preChatForm');
+      } else if (key === 'enablePostChatForm') {
+        loadFormTemplate('postChatForm');
+      } else if (key === 'enableFeedback') {
+        loadFormTemplate('feedback');
       }
     }
-  };
+  }, [config]);
 
   const handleSaveConfiguration = async () => {
-    // Set all saving-related states
     setSaving(true);
     setIsSaving(true);
-    setJustSaved(false); // Reset justSaved state at the start of save operation
+    setJustSaved(false);
     
     try {
       let savedWidget;
 
-      // Prepare widget data
       const widgetData = {
-        name: widgetConfig.name,
-        description: widgetConfig.description,
-        appearance_config: widgetConfig.appearance_config,
-        behavior_config: widgetConfig.behavior_config,
-        content_config: widgetConfig.content_config,
+        name: config.name,
+        description: config.description,
+        appearance_config: config.appearance_config,
+        behavior_config: config.behavior_config,
+        content_config: config.content_config,
         embedding_config: {
-          ...widgetConfig.embedding_config,
-          // Remove widgetId as it's managed by the backend
+          ...config.embedding_config,
           widgetId: undefined
         },
       };
 
-      if (widgetConfig.id) {
-        // Update existing widget
-        savedWidget = await widgetService.updateWidget(widgetConfig.id, widgetData);
-        
-        // Store the saved widget ID to prevent unnecessary reloads
+      if (config.id) {
+        savedWidget = await widgetService.updateWidget(config.id, widgetData);
         setLastSavedId(String(savedWidget.id));
       } else {
-        // Create new widget
         savedWidget = await widgetService.createWidget(widgetData);
-        
-        // Store the saved widget ID to prevent unnecessary reloads
         setLastSavedId(String(savedWidget.id));
-        
-        // Mark that we've just saved a widget and are about to navigate
         setJustSaved(true);
         
-        // First update the state before navigating
-        setWidgetConfig(prev => ({
+        setConfig(prev => ({
           ...prev,
           id: savedWidget.id,
           widget_id: savedWidget.widget_id,
@@ -499,23 +301,19 @@ const WidgetConfigurator = () => {
           },
         }));
         
-        // Use setTimeout with a longer delay to ensure state is updated before navigation
         setTimeout(() => {
           navigate(`/widgets/${savedWidget.id}`);
         }, 300);
         
-        // Show success toast before navigation
         toast({
           title: "Widget Created",
           description: "Your widget has been created successfully and is being loaded.",
         });
         
-        // Return early to prevent duplicate state update
         return;
       }
 
-      // Update local state with saved data
-      setWidgetConfig(prev => ({
+      setConfig(prev => ({
         ...prev,
         id: savedWidget.id,
         widget_id: savedWidget.widget_id,
@@ -535,73 +333,17 @@ const WidgetConfigurator = () => {
     } catch (error) {
       console.error("Error saving widget:", error);
       
-      // Handle validation errors specifically
-      if (error.response && error.response.data && error.response.data.errors) {
-        // Format validation errors for display
-        const validationErrors = error.response.data.errors;
-        const errorMessages = Object.entries(validationErrors)
-          .map(([field, messages]) => {
-            // Format the field name for better readability
-            const formattedField = field
-              .replace('_config', '')
-              .replace(/\./g, ' → ')
-              .replace(/_/g, ' ');
-              
-            return `${formattedField}: ${Array.isArray(messages) ? messages[0] : messages}`;
-          })
-          .join('\n');
-
-        toast({
-          title: "Validation Error",
-          description: (
-            <div className="max-h-[300px] overflow-y-auto">
-              <p className="font-semibold mb-2">Please fix the following issues:</p>
-              <ul className="list-disc pl-4 space-y-1">
-                {Object.entries(validationErrors).map(([field, messages]) => {
-                  // Format the field name for better readability
-                  const formattedField = field
-                    .replace('_config', '')
-                    .replace(/\./g, ' → ')
-                    .replace(/_/g, ' ');
-                    
-                  return (
-                    <li key={field}>
-                      <span className="font-medium">{formattedField}:</span>{' '}
-                      {Array.isArray(messages) ? messages[0] : messages}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ),
-          variant: "destructive",
-          duration: 10000, // Show longer for validation errors
-        });
-      } else if (error.message && error.message.includes('CSRF')) {
-        // Handle CSRF token errors
-        toast({
-          title: "Authentication Error",
-          description: "Your session may have expired. Please refresh the page and try again.",
-          variant: "destructive",
-        });
-      } else {
-        // Handle other errors
-        toast({
-          title: "Error",
-          description: error.message || "Failed to save widget configuration. Please try again.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save widget configuration. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      // Immediately set saving to false to update UI
       setSaving(false);
       
-      // Reset other state flags with appropriate delays
       setTimeout(() => {
-        // Reset isSaving first
         setIsSaving(false);
         
-        // Then reset justSaved after navigation should be complete
         setTimeout(() => {
           setJustSaved(false);
         }, 500);
@@ -610,7 +352,6 @@ const WidgetConfigurator = () => {
   };
 
   const handleResetToDefault = () => {
-    // Get default config from the Widget model
     const defaultConfig = {
       appearance_config: {
         primaryColor: "#6366f1",
@@ -659,8 +400,7 @@ const WidgetConfigurator = () => {
       },
     };
 
-    // Keep existing ID and other metadata
-    setWidgetConfig(prev => ({
+    setConfig(prev => ({
       ...prev,
       appearance_config: defaultConfig.appearance_config,
       behavior_config: defaultConfig.behavior_config,
@@ -679,7 +419,7 @@ const WidgetConfigurator = () => {
   };
 
   const handlePublishWidget = async () => {
-    if (!widgetConfig.id) {
+    if (!config.id) {
       toast({
         title: "Save Required",
         description: "Please save the widget before publishing.",
@@ -689,9 +429,9 @@ const WidgetConfigurator = () => {
     }
 
     try {
-      const publishedWidget = await widgetService.publishWidget(widgetConfig.id);
+      const publishedWidget = await widgetService.publishWidget(config.id);
 
-      setWidgetConfig(prev => ({
+      setConfig(prev => ({
         ...prev,
         is_published: true,
         status: "published",
@@ -712,14 +452,14 @@ const WidgetConfigurator = () => {
   };
 
   const handleUnpublishWidget = async () => {
-    if (!widgetConfig.id) {
+    if (!config.id) {
       return;
     }
 
     try {
-      const unpublishedWidget = await widgetService.unpublishWidget(widgetConfig.id);
+      const unpublishedWidget = await widgetService.unpublishWidget(config.id);
 
-      setWidgetConfig(prev => ({
+      setConfig(prev => ({
         ...prev,
         is_published: false,
         status: "draft",
@@ -740,24 +480,23 @@ const WidgetConfigurator = () => {
   };
 
   const handleExportConfig = () => {
-    // Export widget configuration as JSON
     const configToExport = {
-      name: widgetConfig.name,
-      description: widgetConfig.description,
-      appearance: widgetConfig.appearance_config,
-      behavior: widgetConfig.behavior_config,
-      content: widgetConfig.content_config,
+      name: config.name,
+      description: config.description,
+      appearance: config.appearance_config,
+      behavior: config.behavior_config,
+      content: config.content_config,
       embedding: {
-        allowedDomains: widgetConfig.embedding_config.allowedDomains,
-        enableAnalytics: widgetConfig.embedding_config.enableAnalytics,
-        gdprCompliance: widgetConfig.embedding_config.gdprCompliance,
+        allowedDomains: config.embedding_config.allowedDomains,
+        enableAnalytics: config.embedding_config.enableAnalytics,
+        gdprCompliance: config.embedding_config.gdprCompliance,
       },
     };
 
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(configToExport, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `widget-${widgetConfig.widget_id || 'new'}.json`);
+    downloadAnchorNode.setAttribute("download", `widget-${config.widget_id || 'new'}.json`);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -820,7 +559,7 @@ const WidgetConfigurator = () => {
           onClick={() => setActiveTab("analytics")}
           className="flex items-center gap-2"
         >
-          <BarChart className="h-4 w-4" />
+          <BarChart3 className="h-4 w-4" />
           Analytics
         </Button>
       </div>
@@ -828,18 +567,18 @@ const WidgetConfigurator = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
-            {widgetConfig.name || "Widget Configurator"}
+            {config.name || "Widget Configurator"}
           </h2>
           <p className="text-muted-foreground mt-1">
-            {widgetConfig.description || "Customize your chat widget appearance and behavior"}
+            {config.description || "Customize your chat widget appearance and behavior"}
           </p>
         </div>
         <div className="flex gap-3">
-          {widgetConfig.id && (
+          {config.id && (
             <div className="flex items-center mr-2">
-              <span className={`inline-flex h-2 w-2 rounded-full mr-2 ${widgetConfig.is_active ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              <span className={`inline-flex h-2 w-2 rounded-full mr-2 ${config.is_active ? 'bg-green-500' : 'bg-red-500'}`}></span>
               <span className="text-sm text-muted-foreground">
-                {widgetConfig.status === 'published' ? 'Published' : 'Draft'}
+                {config.status === 'published' ? 'Published' : 'Draft'}
               </span>
             </div>
           )}
@@ -867,9 +606,9 @@ const WidgetConfigurator = () => {
             </HoverCardContent>
           </HoverCard>
 
-          {widgetConfig.id && (
+          {config.id && (
             <>
-              {widgetConfig.is_published ? (
+              {config.is_published ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -1022,38 +761,30 @@ const WidgetConfigurator = () => {
                 <CardContent className="pt-6">
                   <TabsContent value="appearance" className="space-y-6 mt-0">
                     <WidgetAppearanceTab
-                      config={widgetConfig.appearance_config}
-                      onChange={(key, value) =>
-                        handleConfigChange("appearance", key, value)
-                      }
+                      config={config.appearance_config}
+                      onChange={(key, value) => handleConfigChange('appearance', key, value)}
                     />
                   </TabsContent>
 
                   <TabsContent value="behavior" className="space-y-4 mt-0">
                     <WidgetBehaviorTab
-                      config={widgetConfig.behavior_config}
-                      onChange={(key, value) =>
-                        handleConfigChange("behavior", key, value)
-                      }
+                      config={config.behavior_config}
+                      onChange={(key, value) => handleConfigChange('behavior', key, value)}
                     />
                   </TabsContent>
 
                   <TabsContent value="content" className="space-y-4 mt-0">
                     <WidgetContentTab
-                      config={widgetConfig.content_config}
-                      onChange={(key, value) =>
-                        handleConfigChange("content", key, value)
-                      }
+                      config={config.content_config}
+                      onChange={(key, value) => handleConfigChange('content', key, value)}
                     />
                   </TabsContent>
 
                   <TabsContent value="embedding" className="space-y-4 mt-0">
                     <WidgetEmbeddingTab
-                      config={widgetConfig.embedding_config}
-                      widgetId={widgetConfig.widget_id || widgetConfig.embedding_config.widgetId}
-                      onChange={(key, value) =>
-                        handleConfigChange("embedding", key, value)
-                      }
+                      config={config.embedding_config}
+                      widgetId={config.widget_id || ''}
+                      onChange={(key, value) => handleConfigChange('embedding', key, value)}
                     />
                   </TabsContent>
                 </CardContent>
@@ -1062,14 +793,14 @@ const WidgetConfigurator = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <WidgetPreview
+            <ModernWidgetPreview
               config={{
-                appearance: widgetConfig.appearance_config,
-                behavior: widgetConfig.behavior_config,
-                content: widgetConfig.content_config,
-                embedding: widgetConfig.embedding_config
+                appearance: config.appearance_config,
+                behavior: config.behavior_config,
+                content: config.content_config,
+                embedding: config.embedding_config,
               }}
-              key={`preview-${previewUpdateTrigger}`}
+              key={previewUpdateTrigger}
             />
           </div>
         </div>
@@ -1077,12 +808,12 @@ const WidgetConfigurator = () => {
 
       {activeTab === "testing" && (
         <WidgetTestingPlatform
-          widgetId={widgetConfig.widget_id || widgetConfig.embedding_config.widgetId}
+          widgetId={config.widget_id || config.embedding_config.widgetId}
           config={{
-            appearance: widgetConfig.appearance_config,
-            behavior: widgetConfig.behavior_config,
-            content: widgetConfig.content_config,
-            embedding: widgetConfig.embedding_config
+            appearance: config.appearance_config,
+            behavior: config.behavior_config,
+            content: config.content_config,
+            embedding: config.embedding_config
           }}
         />
       )}

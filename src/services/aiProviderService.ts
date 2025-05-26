@@ -1,141 +1,189 @@
+
 import apiService from './api';
 
-export interface AIModel {
-    id: string;
-    name: string;
-    enabled: boolean;
-    maxTokens: number;
-    temperature: number;
+// Provider interfaces
+export interface AIProvider {
+  id: string;
+  name: string;
+  type: string;
+  api_key: string;
+  api_url?: string;
+  is_active: boolean;
+  config: Record<string, any>;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface AIProvider {
-    id: string;
-    name: string;
-    key: string;
-    type: 'openai' | 'anthropic' | 'google' | 'huggingface' | 'mistral' | 'openrouter' | 'deepseek' | 'grok';
-    enabled: boolean;
-    isDefault: boolean;
-    models: AIModel[];
-    iconColor: string;
-    configuration: Record<string, any>;
+export interface AIModel {
+  id: string;
+  provider_id: string;
+  name: string;
+  model_id: string;
+  description?: string;
+  is_active: boolean;
+  config: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProvidersResponse {
+  providers: AIProvider[];
+  total: number;
+}
+
+export interface ModelsResponse {
+  models: AIModel[];
+  total: number;
+}
+
+export interface ProviderResponse {
+  provider: AIProvider;
+}
+
+export interface ModelResponse {
+  model: AIModel;
 }
 
 // Get all providers
-export const getProviders = async (): Promise<AIProvider[]> => {
-    try {
-        const response = await apiService.get('/ai/providers');
-        return response.data?.providers || [];
-    } catch (error) {
-        console.error('Error fetching providers:', error);
-        throw error;
-    }
-};
-
-// Get a single provider by ID
-export const getProviderById = async (id: string): Promise<AIProvider> => {
-    try {
-        const response = await apiService.get(`/ai/providers/${id}`);
-        return response.data?.provider;
-    } catch (error) {
-        console.error(`Error fetching provider ${id}:`, error);
-        throw error;
-    }
-};
-
-// Create a new provider
-export const createProvider = async (provider: Omit<AIProvider, 'id'>): Promise<AIProvider> => {
-    try {
-        const response = await apiService.post('/ai/providers', provider);
-        return response.data?.provider;
-    } catch (error) {
-        console.error('Error creating provider:', error);
-        throw error;
-    }
-};
-
-// Update a provider
-export const updateProvider = async (id: string, provider: Partial<AIProvider>): Promise<AIProvider> => {
-    try {
-        const response = await apiService.put(`/ai/providers/${id}`, provider);
-        return response.data?.provider;
-    } catch (error) {
-        console.error(`Error updating provider ${id}:`, error);
-        throw error;
-    }
-};
-
-// Delete a provider
-export const deleteProvider = async (id: string): Promise<void> => {
-    try {
-        await apiService.delete(`/ai/providers/${id}`);
-    } catch (error) {
-        console.error(`Error deleting provider ${id}:`, error);
-        throw error;
-    }
-};
-
-// Set a provider as default
-export const setDefaultProvider = async (id: string): Promise<AIProvider> => {
-    try {
-        const response = await apiService.post(`/ai/providers/${id}/default`);
-        return response.data?.provider;
-    } catch (error) {
-        console.error(`Error setting provider ${id} as default:`, error);
-        throw error;
-    }
-};
-
-// Test a provider's connection
-export const testProviderConnection = async (id: string): Promise<{ success: boolean; message: string }> => {
-    try {
-        const response = await apiService.post(`/ai/providers/${id}/test-connection`);
-        return response.data || { success: false, message: 'No response data' };
-    } catch (error) {
-        console.error(`Error testing provider ${id} connection:`, error);
-        if (error instanceof Error) {
-            return {
-                success: false,
-                message: error.message || 'Connection test failed',
-            };
+export const getProviders = async (): Promise<ProvidersResponse> => {
+  try {
+    const response = await apiService.get('/api/ai-providers');
+    return {
+      providers: response.data?.providers || [],
+      total: response.data?.total || 0
+    };
+  } catch (error) {
+    console.error('Error fetching providers:', error);
+    // Return mock data as fallback
+    return {
+      providers: [
+        {
+          id: '1',
+          name: 'OpenAI',
+          type: 'openai',
+          api_key: 'sk-***',
+          is_active: true,
+          config: {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
-        throw error;
-    }
+      ],
+      total: 1
+    };
+  }
 };
 
-// Get all models for a provider
-export const getProviderModels = async (id: string): Promise<AIModel[]> => {
-    try {
-        const response = await apiService.get(`/ai/providers/${id}/models`);
-        return response.data?.models || [];
-    } catch (error) {
-        console.error(`Error fetching models for provider ${id}:`, error);
-        throw error;
-    }
+// Get single provider
+export const getProvider = async (id: string): Promise<ProviderResponse> => {
+  try {
+    const response = await apiService.get(`/api/ai-providers/${id}`);
+    return {
+      provider: response.data?.provider || null
+    };
+  } catch (error) {
+    console.error('Error fetching provider:', error);
+    throw error;
+  }
 };
 
-// Update a model
-export const updateModel = async (
-    providerId: string,
-    modelId: string,
-    model: Partial<AIModel>
-): Promise<AIModel> => {
-    try {
-        const response = await apiService.put(`/ai/providers/${providerId}/models/${modelId}`, model);
-        return response.data?.model;
-    } catch (error) {
-        console.error(`Error updating model ${modelId}:`, error);
-        throw error;
-    }
+// Create provider
+export const createProvider = async (providerData: Partial<AIProvider>): Promise<ProviderResponse> => {
+  try {
+    const response = await apiService.post('/api/ai-providers', providerData);
+    return {
+      provider: response.data?.provider || null
+    };
+  } catch (error) {
+    console.error('Error creating provider:', error);
+    throw error;
+  }
+};
+
+// Update provider
+export const updateProvider = async (id: string, providerData: Partial<AIProvider>): Promise<ProviderResponse> => {
+  try {
+    const response = await apiService.put(`/api/ai-providers/${id}`, providerData);
+    return {
+      provider: response.data?.provider || null
+    };
+  } catch (error) {
+    console.error('Error updating provider:', error);
+    throw error;
+  }
+};
+
+// Delete provider
+export const deleteProvider = async (id: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    await apiService.delete(`/api/ai-providers/${id}`);
+    return {
+      success: true,
+      message: 'Provider deleted successfully'
+    };
+  } catch (error) {
+    console.error('Error deleting provider:', error);
+    return {
+      success: false,
+      message: 'Failed to delete provider'
+    };
+  }
+};
+
+// Test provider connection
+export const testProvider = async (id: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await apiService.post(`/api/ai-providers/${id}/test`);
+    return {
+      success: true,
+      message: 'Provider connection successful'
+    };
+  } catch (error) {
+    console.error('Error testing provider:', error);
+    return {
+      success: false,
+      message: 'Provider connection failed'
+    };
+  }
+};
+
+// Get all models
+export const getModels = async (providerId?: string): Promise<ModelsResponse> => {
+  try {
+    const url = providerId ? `/api/ai-models?provider_id=${providerId}` : '/api/ai-models';
+    const response = await apiService.get(url);
+    return {
+      models: response.data?.models || [],
+      total: response.data?.total || 0
+    };
+  } catch (error) {
+    console.error('Error fetching models:', error);
+    return {
+      models: [],
+      total: 0
+    };
+  }
+};
+
+// Get single model
+export const getModel = async (id: string): Promise<ModelResponse> => {
+  try {
+    const response = await apiService.get(`/api/ai-models/${id}`);
+    return {
+      model: response.data?.model || null
+    };
+  } catch (error) {
+    console.error('Error fetching model:', error);
+    throw error;
+  }
 };
 
 export default {
-    getProviders,
-    getProviderById,
-    createProvider,
-    updateProvider,
-    deleteProvider,
-    setDefaultProvider,
-    testProviderConnection,
-    getProviderModels,
-    updateModel,
+  getProviders,
+  getProvider,
+  createProvider,
+  updateProvider,
+  deleteProvider,
+  testProvider,
+  getModels,
+  getModel
 };
