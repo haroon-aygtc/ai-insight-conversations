@@ -1,13 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, RefreshCw, Download, Upload, BarChart2 } from "lucide-react";
-import ModelCard from "@/components/ai-model-management/ModelCard";
-import ModelFilters from "@/components/ai-model-management/ModelFilters";
-import ModelMetricsCard from "@/components/ai-model-management/ModelMetricsCard";
-import ModelVersionHistory from "@/components/ai-model-management/ModelVersionHistory";
-import ModelDeploymentSettings from "@/components/ai-model-management/ModelDeploymentSettings";
-import ModelTrainingForm from "@/components/ai-model-management/ModelTrainingForm";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Brain, Cpu, Database, Settings, Zap, TrendingUp, Activity, Plus } from "lucide-react";
 
 const AIModelManagement = () => {
   const [activeTab, setActiveTab] = useState("models");
@@ -192,7 +190,7 @@ const AIModelManagement = () => {
   const selectedModel = models.find((model) => model.id === selectedModelId);
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">AI Model Management</h1>

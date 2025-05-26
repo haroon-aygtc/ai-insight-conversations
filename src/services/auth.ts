@@ -51,6 +51,11 @@ export interface SessionInfo {
   location?: string;
 }
 
+export interface ActivityLogsResponse {
+  logs: ActivityLog[];
+  total: number;
+}
+
 /**
  * Simple authentication service using pure Laravel Sanctum
  * No custom activity tracking or session management
@@ -196,35 +201,38 @@ class AuthService {
   }
 
   /**
-   * Get activity logs
+   * Get activity logs with pagination
    */
-  async getActivityLogs(): Promise<ActivityLog[]> {
+  async getActivityLogs(page: number = 1, perPage: number = 20): Promise<ActivityLogsResponse> {
     try {
-      const response = await apiService.get('/api/auth/activity-logs');
+      const response = await apiService.get(`/api/auth/activity-logs?page=${page}&per_page=${perPage}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching activity logs:', error);
       // Return mock data for now
-      return [
-        {
-          id: '1',
-          user_id: '1',
-          action: 'login',
-          description: 'User logged in successfully',
-          ip_address: '192.168.1.1',
-          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          user_id: '1',
-          action: 'widget_created',
-          description: 'Created new chat widget',
-          ip_address: '192.168.1.1',
-          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-        }
-      ];
+      return {
+        logs: [
+          {
+            id: '1',
+            user_id: '1',
+            action: 'login',
+            description: 'User logged in successfully',
+            ip_address: '192.168.1.1',
+            user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            created_at: new Date().toISOString(),
+          },
+          {
+            id: '2',
+            user_id: '1',
+            action: 'widget_created',
+            description: 'Created new chat widget',
+            ip_address: '192.168.1.1',
+            user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            created_at: new Date(Date.now() - 3600000).toISOString(),
+          }
+        ],
+        total: 2
+      };
     }
   }
 

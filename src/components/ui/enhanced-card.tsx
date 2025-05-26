@@ -1,9 +1,8 @@
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 
-interface EnhancedCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface EnhancedCardProps extends Omit<HTMLMotionProps<"div">, "onDrag"> {
   variant?: "default" | "elevated" | "glass" | "gradient" | "bordered";
   hover?: boolean;
   interactive?: boolean;

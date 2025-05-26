@@ -1,5 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { Widget, WidgetData } from "@/services/widgetService";
+import React, { useState, useCallback } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { Save, Eye, Settings, Palette, MessageSquare, Code, BarChart3, Play } from "lucide-react";
+import WidgetAppearanceTab from "@/components/widget-configurator/WidgetAppearanceTab";
+import WidgetBehaviorTab from "@/components/widget-configurator/WidgetBehaviorTab";
+import WidgetContentTab from "@/components/widget-configurator/WidgetContentTab";
+import WidgetEmbeddingTab from "@/components/widget-configurator/WidgetEmbeddingTab";
+import ModernWidgetPreview from "@/components/widget-configurator/ModernWidgetPreview";
+import * as widgetService from "@/services/widgetService";
 
 // Define local Widget interface if needed
 interface LocalWidget {
@@ -62,36 +76,6 @@ interface LocalWidget {
   };
   [key: string]: any;
 }
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import {
-  MessageSquare,
-  Send,
-  ChevronRight,
-  Download,
-  Settings,
-  Layers,
-  Code,
-  BarChart,
-  Save,
-  Play,
-  Pause,
-} from "lucide-react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { WidgetAppearanceTab } from "@/components/widget-configurator/WidgetAppearanceTab";
-import { WidgetBehaviorTab } from "@/components/widget-configurator/WidgetBehaviorTab";
-import { WidgetContentTab } from "@/components/widget-configurator/WidgetContentTab";
-import { WidgetEmbeddingTab } from "@/components/widget-configurator/WidgetEmbeddingTab";
-import { WidgetPreview } from "@/components/widget-configurator/WidgetPreview";
-import { WidgetTestingPlatform } from "@/components/widget-configurator/testing/WidgetTestingPlatform";
-import { useToast } from "@/components/ui/use-toast";
-import { useParams, useNavigate } from "react-router-dom";
-import { widgetService } from "@/services/widgetService";
 
 const WidgetConfigurator = () => {
   const { toast } = useToast();
@@ -104,7 +88,7 @@ const WidgetConfigurator = () => {
   const [saving, setSaving] = useState(false);
 
   // Widget configuration state
-  const [widgetConfig, setWidgetConfig] = useState({
+  const [config, setConfig] = useState({
     id: null,
     widget_id: null,
     name: "New Widget",
@@ -259,7 +243,7 @@ const WidgetConfigurator = () => {
         throw new Error('Received invalid widget data from server');
       }
       
-      setWidgetConfig({
+      setConfig({
         id: widgetData.id,
         widget_id: widgetData.widget_id,
         name: widgetData.name,
@@ -317,11 +301,11 @@ const WidgetConfigurator = () => {
   // Force preview update when configuration changes
   useEffect(() => {
     setPreviewUpdateTrigger(prev => prev + 1);
-  }, [widgetConfig]);
+  }, [config]);
 
-  const handleConfigChange = async (section, key, value) => {
+  const handleConfigChange = useCallback((section, key, value) => {
     // First update the config with the new value
-    setWidgetConfig((prev) => ({
+    setConfig((prev) => ({
       ...prev,
       [`${section}_config`]: {
         ...prev[`${section}_config`],
@@ -342,12 +326,12 @@ const WidgetConfigurator = () => {
           
           // Get current widget config as WidgetData
           const currentConfig: widgetService.WidgetData = {
-            name: widgetConfig.name,
-            description: widgetConfig.description,
-            appearance_config: widgetConfig.appearance_config,
-            behavior_config: widgetConfig.behavior_config,
-            content_config: widgetConfig.content_config,
-            embedding_config: widgetConfig.embedding_config,
+            name: config.name,
+            description: config.description,
+            appearance_config: config.appearance_config,
+            behavior_config: config.behavior_config,
+            content_config: config.content_config,
+            embedding_config: config.embedding_config,
           };
           
           // Load default pre-chat form template
@@ -357,7 +341,7 @@ const WidgetConfigurator = () => {
           );
           
           // Update widget config with template data
-          setWidgetConfig(prev => ({
+          setConfig(prev => ({
             ...prev,
             content_config: updatedConfig.content_config || prev.content_config
           }));
@@ -376,12 +360,12 @@ const WidgetConfigurator = () => {
           
           // Get current widget config as WidgetData
           const currentConfig: widgetService.WidgetData = {
-            name: widgetConfig.name,
-            description: widgetConfig.description,
-            appearance_config: widgetConfig.appearance_config,
-            behavior_config: widgetConfig.behavior_config,
-            content_config: widgetConfig.content_config,
-            embedding_config: widgetConfig.embedding_config,
+            name: config.name,
+            description: config.description,
+            appearance_config: config.appearance_config,
+            behavior_config: config.behavior_config,
+            content_config: config.content_config,
+            embedding_config: config.embedding_config,
           };
           
           // Load default post-chat form template
@@ -391,7 +375,7 @@ const WidgetConfigurator = () => {
           );
           
           // Update widget config with template data
-          setWidgetConfig(prev => ({
+          setConfig(prev => ({
             ...prev,
             content_config: updatedConfig.content_config || prev.content_config
           }));
@@ -410,12 +394,12 @@ const WidgetConfigurator = () => {
           
           // Get current widget config as WidgetData
           const currentConfig: widgetService.WidgetData = {
-            name: widgetConfig.name,
-            description: widgetConfig.description,
-            appearance_config: widgetConfig.appearance_config,
-            behavior_config: widgetConfig.behavior_config,
-            content_config: widgetConfig.content_config,
-            embedding_config: widgetConfig.embedding_config,
+            name: config.name,
+            description: config.description,
+            appearance_config: config.appearance_config,
+            behavior_config: config.behavior_config,
+            content_config: config.content_config,
+            embedding_config: config.embedding_config,
           };
           
           // Load default feedback form template
@@ -425,7 +409,7 @@ const WidgetConfigurator = () => {
           );
           
           // Update widget config with template data
-          setWidgetConfig(prev => ({
+          setConfig(prev => ({
             ...prev,
             content_config: updatedConfig.content_config || prev.content_config
           }));
@@ -444,7 +428,7 @@ const WidgetConfigurator = () => {
         });
       }
     }
-  };
+  }, [config]);
 
   const handleSaveConfiguration = async () => {
     // Set all saving-related states
@@ -457,21 +441,21 @@ const WidgetConfigurator = () => {
 
       // Prepare widget data
       const widgetData = {
-        name: widgetConfig.name,
-        description: widgetConfig.description,
-        appearance_config: widgetConfig.appearance_config,
-        behavior_config: widgetConfig.behavior_config,
-        content_config: widgetConfig.content_config,
+        name: config.name,
+        description: config.description,
+        appearance_config: config.appearance_config,
+        behavior_config: config.behavior_config,
+        content_config: config.content_config,
         embedding_config: {
-          ...widgetConfig.embedding_config,
+          ...config.embedding_config,
           // Remove widgetId as it's managed by the backend
           widgetId: undefined
         },
       };
 
-      if (widgetConfig.id) {
+      if (config.id) {
         // Update existing widget
-        savedWidget = await widgetService.updateWidget(widgetConfig.id, widgetData);
+        savedWidget = await widgetService.updateWidget(config.id, widgetData);
         
         // Store the saved widget ID to prevent unnecessary reloads
         setLastSavedId(String(savedWidget.id));
@@ -486,7 +470,7 @@ const WidgetConfigurator = () => {
         setJustSaved(true);
         
         // First update the state before navigating
-        setWidgetConfig(prev => ({
+        setConfig(prev => ({
           ...prev,
           id: savedWidget.id,
           widget_id: savedWidget.widget_id,
@@ -515,7 +499,7 @@ const WidgetConfigurator = () => {
       }
 
       // Update local state with saved data
-      setWidgetConfig(prev => ({
+      setConfig(prev => ({
         ...prev,
         id: savedWidget.id,
         widget_id: savedWidget.widget_id,
@@ -660,7 +644,7 @@ const WidgetConfigurator = () => {
     };
 
     // Keep existing ID and other metadata
-    setWidgetConfig(prev => ({
+    setConfig(prev => ({
       ...prev,
       appearance_config: defaultConfig.appearance_config,
       behavior_config: defaultConfig.behavior_config,
@@ -679,7 +663,7 @@ const WidgetConfigurator = () => {
   };
 
   const handlePublishWidget = async () => {
-    if (!widgetConfig.id) {
+    if (!config.id) {
       toast({
         title: "Save Required",
         description: "Please save the widget before publishing.",
@@ -689,9 +673,9 @@ const WidgetConfigurator = () => {
     }
 
     try {
-      const publishedWidget = await widgetService.publishWidget(widgetConfig.id);
+      const publishedWidget = await widgetService.publishWidget(config.id);
 
-      setWidgetConfig(prev => ({
+      setConfig(prev => ({
         ...prev,
         is_published: true,
         status: "published",
@@ -712,14 +696,14 @@ const WidgetConfigurator = () => {
   };
 
   const handleUnpublishWidget = async () => {
-    if (!widgetConfig.id) {
+    if (!config.id) {
       return;
     }
 
     try {
-      const unpublishedWidget = await widgetService.unpublishWidget(widgetConfig.id);
+      const unpublishedWidget = await widgetService.unpublishWidget(config.id);
 
-      setWidgetConfig(prev => ({
+      setConfig(prev => ({
         ...prev,
         is_published: false,
         status: "draft",
@@ -742,22 +726,22 @@ const WidgetConfigurator = () => {
   const handleExportConfig = () => {
     // Export widget configuration as JSON
     const configToExport = {
-      name: widgetConfig.name,
-      description: widgetConfig.description,
-      appearance: widgetConfig.appearance_config,
-      behavior: widgetConfig.behavior_config,
-      content: widgetConfig.content_config,
+      name: config.name,
+      description: config.description,
+      appearance: config.appearance_config,
+      behavior: config.behavior_config,
+      content: config.content_config,
       embedding: {
-        allowedDomains: widgetConfig.embedding_config.allowedDomains,
-        enableAnalytics: widgetConfig.embedding_config.enableAnalytics,
-        gdprCompliance: widgetConfig.embedding_config.gdprCompliance,
+        allowedDomains: config.embedding_config.allowedDomains,
+        enableAnalytics: config.embedding_config.enableAnalytics,
+        gdprCompliance: config.embedding_config.gdprCompliance,
       },
     };
 
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(configToExport, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `widget-${widgetConfig.widget_id || 'new'}.json`);
+    downloadAnchorNode.setAttribute("download", `widget-${config.widget_id || 'new'}.json`);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -820,7 +804,7 @@ const WidgetConfigurator = () => {
           onClick={() => setActiveTab("analytics")}
           className="flex items-center gap-2"
         >
-          <BarChart className="h-4 w-4" />
+          <BarChart3 className="h-4 w-4" />
           Analytics
         </Button>
       </div>
@@ -828,18 +812,18 @@ const WidgetConfigurator = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
-            {widgetConfig.name || "Widget Configurator"}
+            {config.name || "Widget Configurator"}
           </h2>
           <p className="text-muted-foreground mt-1">
-            {widgetConfig.description || "Customize your chat widget appearance and behavior"}
+            {config.description || "Customize your chat widget appearance and behavior"}
           </p>
         </div>
         <div className="flex gap-3">
-          {widgetConfig.id && (
+          {config.id && (
             <div className="flex items-center mr-2">
-              <span className={`inline-flex h-2 w-2 rounded-full mr-2 ${widgetConfig.is_active ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              <span className={`inline-flex h-2 w-2 rounded-full mr-2 ${config.is_active ? 'bg-green-500' : 'bg-red-500'}`}></span>
               <span className="text-sm text-muted-foreground">
-                {widgetConfig.status === 'published' ? 'Published' : 'Draft'}
+                {config.status === 'published' ? 'Published' : 'Draft'}
               </span>
             </div>
           )}
@@ -867,9 +851,9 @@ const WidgetConfigurator = () => {
             </HoverCardContent>
           </HoverCard>
 
-          {widgetConfig.id && (
+          {config.id && (
             <>
-              {widgetConfig.is_published ? (
+              {config.is_published ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -1022,7 +1006,7 @@ const WidgetConfigurator = () => {
                 <CardContent className="pt-6">
                   <TabsContent value="appearance" className="space-y-6 mt-0">
                     <WidgetAppearanceTab
-                      config={widgetConfig.appearance_config}
+                      config={config.appearance_config}
                       onChange={(key, value) =>
                         handleConfigChange("appearance", key, value)
                       }
@@ -1031,7 +1015,7 @@ const WidgetConfigurator = () => {
 
                   <TabsContent value="behavior" className="space-y-4 mt-0">
                     <WidgetBehaviorTab
-                      config={widgetConfig.behavior_config}
+                      config={config.behavior_config}
                       onChange={(key, value) =>
                         handleConfigChange("behavior", key, value)
                       }
@@ -1040,7 +1024,7 @@ const WidgetConfigurator = () => {
 
                   <TabsContent value="content" className="space-y-4 mt-0">
                     <WidgetContentTab
-                      config={widgetConfig.content_config}
+                      config={config.content_config}
                       onChange={(key, value) =>
                         handleConfigChange("content", key, value)
                       }
@@ -1049,8 +1033,8 @@ const WidgetConfigurator = () => {
 
                   <TabsContent value="embedding" className="space-y-4 mt-0">
                     <WidgetEmbeddingTab
-                      config={widgetConfig.embedding_config}
-                      widgetId={widgetConfig.widget_id || widgetConfig.embedding_config.widgetId}
+                      config={config.embedding_config}
+                      widgetId={config.widget_id || config.embedding_config.widgetId}
                       onChange={(key, value) =>
                         handleConfigChange("embedding", key, value)
                       }
@@ -1062,12 +1046,12 @@ const WidgetConfigurator = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <WidgetPreview
+            <ModernWidgetPreview
               config={{
-                appearance: widgetConfig.appearance_config,
-                behavior: widgetConfig.behavior_config,
-                content: widgetConfig.content_config,
-                embedding: widgetConfig.embedding_config
+                appearance: config.appearance_config,
+                behavior: config.behavior_config,
+                content: config.content_config,
+                embedding: config.embedding_config
               }}
               key={`preview-${previewUpdateTrigger}`}
             />
@@ -1077,12 +1061,12 @@ const WidgetConfigurator = () => {
 
       {activeTab === "testing" && (
         <WidgetTestingPlatform
-          widgetId={widgetConfig.widget_id || widgetConfig.embedding_config.widgetId}
+          widgetId={config.widget_id || config.embedding_config.widgetId}
           config={{
-            appearance: widgetConfig.appearance_config,
-            behavior: widgetConfig.behavior_config,
-            content: widgetConfig.content_config,
-            embedding: widgetConfig.embedding_config
+            appearance: config.appearance_config,
+            behavior: config.behavior_config,
+            content: config.content_config,
+            embedding: config.embedding_config
           }}
         />
       )}
