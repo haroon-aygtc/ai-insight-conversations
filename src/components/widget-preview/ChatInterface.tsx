@@ -29,12 +29,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Simulate typing indicator
   useEffect(() => {
     if (showTypingIndicator && messages.length > 0 && messages[messages.length - 1].role === 'user') {
       setIsTyping(true);

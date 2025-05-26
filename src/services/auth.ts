@@ -57,22 +57,12 @@ export interface ActivityLogsResponse {
   total: number;
 }
 
-/**
- * Simple authentication service using pure Laravel Sanctum
- * No custom activity tracking or session management
- */
 class AuthService {
-  // User data
   user: User | null = null;
 
-  /**
-   * Login user with credentials
-   */
   async login(credentials: LoginCredentials): Promise<User> {
     try {
-      // Get CSRF token first
       await apiService.getCsrfToken(true);
-      
       const response = await apiService.post<AuthResponse>('/auth/login', credentials);
       
       if (response.data?.user) {
@@ -88,14 +78,9 @@ class AuthService {
     }
   }
 
-  /**
-   * Register a new user
-   */
   async register(data: RegisterData): Promise<User> {
     try {
-      // Get CSRF token first
       await apiService.getCsrfToken(true);
-      
       const response = await apiService.post<AuthResponse>('/auth/register', data);
       
       if (response.data?.user) {
@@ -111,33 +96,24 @@ class AuthService {
     }
   }
 
-  /**
-   * Logout the current user
-   */
   async logout(): Promise<void> {
     try {
       await apiService.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Always clear local auth data
       this.clearAuth();
     }
   }
 
-  /**
-   * Get the current authenticated user
-   */
   async getCurrentUser(): Promise<User> {
     try {
-      // Try to get from storage first
       const storedUser = this.getStoredUser();
       if (storedUser) {
         this.user = storedUser;
         return storedUser;
       }
 
-      // If not in storage, fetch from API
       const response = await apiService.get<{ user: User }>('/auth/user');
       
       if (response.data?.user) {
@@ -154,9 +130,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Get user from session storage
-   */
   getStoredUser(): User | null {
     const userJson = sessionStorage.getItem('user');
     if (userJson) {
@@ -170,40 +143,25 @@ class AuthService {
     return null;
   }
 
-  /**
-   * Check if user is authenticated
-   */
   isAuthenticated(): boolean {
     return !!this.getStoredUser();
   }
 
-  /**
-   * Check if user has a specific role
-   */
   hasRole(role: string): boolean {
     const user = this.getStoredUser();
     return !!user && Array.isArray(user.roles) && user.roles.includes(role);
   }
 
-  /**
-   * Check if user has a specific permission
-   */
   hasPermission(permission: string): boolean {
     const user = this.getStoredUser();
     return !!user && Array.isArray(user.permissions) && user.permissions.includes(permission);
   }
 
-  /**
-   * Clear all authentication data
-   */
   clearAuth(): void {
     this.user = null;
     sessionStorage.removeItem('user');
   }
 
-  /**
-   * Get activity logs with pagination
-   */
   async getActivityLogs(page: number = 1, perPage: number = 20): Promise<ActivityLogsResponse> {
     try {
       const response = await apiService.get(`/api/auth/activity-logs?page=${page}&per_page=${perPage}`);
@@ -213,7 +171,6 @@ class AuthService {
       };
     } catch (error) {
       console.error('Error fetching activity logs:', error);
-      // Return mock data for now
       return {
         logs: [
           {
@@ -240,16 +197,12 @@ class AuthService {
     }
   }
 
-  /**
-   * Get active sessions
-   */
   async getActiveSessions(): Promise<SessionInfo[]> {
     try {
       const response = await apiService.get('/api/auth/sessions');
       return response.data?.sessions || [];
     } catch (error) {
       console.error('Error fetching active sessions:', error);
-      // Return mock data for now
       return [
         {
           id: '1',
@@ -273,9 +226,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Terminate a session
-   */
   async terminateSession(sessionId: string): Promise<void> {
     try {
       await apiService.delete(`/api/auth/sessions/${sessionId}`);
@@ -285,13 +235,9 @@ class AuthService {
     }
   }
 
-  /**
-   * Logout all devices
-   */
   async logoutAllDevices(): Promise<void> {
     try {
       await apiService.post('/api/auth/logout-all');
-      // Clear local storage and redirect to login
       localStorage.removeItem('token');
       window.location.href = '/login';
     } catch (error) {

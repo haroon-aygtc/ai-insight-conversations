@@ -1,7 +1,6 @@
 
 import apiService from './api';
 
-// Widget interfaces
 export interface WidgetData {
   name: string;
   description: string;
@@ -28,14 +27,12 @@ export interface WidgetListResponse {
   perPage: number;
 }
 
-// Get all widgets
 export const getWidgets = async (page: number = 1, perPage: number = 10): Promise<WidgetListResponse> => {
   try {
     const response = await apiService.get(`/api/widgets?page=${page}&per_page=${perPage}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching widgets:', error);
-    // Return mock data if API fails
     return {
       widgets: [
         {
@@ -74,7 +71,6 @@ export const getWidgets = async (page: number = 1, perPage: number = 10): Promis
   }
 };
 
-// Get single widget
 export const getWidget = async (id: string): Promise<Widget> => {
   try {
     const response = await apiService.get(`/api/widgets/${id}`);
@@ -85,7 +81,6 @@ export const getWidget = async (id: string): Promise<Widget> => {
   }
 };
 
-// Create new widget
 export const createWidget = async (widgetData: WidgetData): Promise<Widget> => {
   try {
     const response = await apiService.post('/api/widgets', widgetData);
@@ -96,7 +91,6 @@ export const createWidget = async (widgetData: WidgetData): Promise<Widget> => {
   }
 };
 
-// Update existing widget
 export const updateWidget = async (id: string | number, widgetData: WidgetData): Promise<Widget> => {
   try {
     const response = await apiService.put(`/api/widgets/${id}`, widgetData);
@@ -107,7 +101,6 @@ export const updateWidget = async (id: string | number, widgetData: WidgetData):
   }
 };
 
-// Delete widget
 export const deleteWidget = async (id: string | number): Promise<void> => {
   try {
     await apiService.delete(`/api/widgets/${id}`);
@@ -117,7 +110,6 @@ export const deleteWidget = async (id: string | number): Promise<void> => {
   }
 };
 
-// Publish widget
 export const publishWidget = async (id: string | number): Promise<Widget> => {
   try {
     const response = await apiService.post(`/api/widgets/${id}/publish`);
@@ -128,7 +120,6 @@ export const publishWidget = async (id: string | number): Promise<Widget> => {
   }
 };
 
-// Unpublish widget
 export const unpublishWidget = async (id: string | number): Promise<Widget> => {
   try {
     const response = await apiService.post(`/api/widgets/${id}/unpublish`);
@@ -139,7 +130,6 @@ export const unpublishWidget = async (id: string | number): Promise<Widget> => {
   }
 };
 
-// Load default form template
 export const loadDefaultFormTemplate = async (
   widgetConfig: WidgetData,
   formType: 'preChatForm' | 'postChatForm' | 'feedback'
@@ -152,7 +142,6 @@ export const loadDefaultFormTemplate = async (
     return response.data.config;
   } catch (error) {
     console.error('Error loading form template:', error);
-    // Return default templates as fallback
     const defaultTemplates = {
       preChatForm: {
         ...widgetConfig,
@@ -190,7 +179,7 @@ export const loadDefaultFormTemplate = async (
           ]
         }
       },
-      postChatForm: widgetConfig // No specific template for post-chat form yet
+      postChatForm: widgetConfig
     };
 
     return defaultTemplates[formType] || widgetConfig;
