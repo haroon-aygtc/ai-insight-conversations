@@ -13,7 +13,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Select,
   SelectContent,
@@ -147,7 +152,7 @@ export default function WidgetTesting() {
       isActive: widget.is_active !== false,
       isPublished: widget.is_published === true,
       widgetName: widget.name || "AI Chat Widget",
-      lastUpdated: widget.updated_at || new Date().toISOString()
+      lastUpdated: widget.updated_at || new Date().toISOString(),
     };
 
     switch (embedType) {
@@ -210,7 +215,10 @@ export default function WidgetTesting() {
           <h1 className="text-2xl font-bold">Widget Preview & Embed Center</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          <Badge
+            variant="outline"
+            className="bg-blue-50 text-blue-700 border-blue-200"
+          >
             Testing Center
           </Badge>
         </div>
@@ -336,116 +344,133 @@ export default function WidgetTesting() {
                       </div>
 
                       <TooltipProvider>
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-                        <Button
-                          variant={
-                            embedType === "script" ? "default" : "outline"
-                          }
-                          onClick={() => setEmbedType("script")}
-                          className="justify-start"
-                        >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center">
-                          <Code className="h-4 w-4 mr-2" />
-                          JavaScript
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Standard JavaScript embed code with full configuration</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Button>
-                        <Button
-                          variant={
-                            embedType === "iframe" ? "default" : "outline"
-                          }
-                          onClick={() => setEmbedType("iframe")}
-                          className="justify-start"
-                        >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center">
-                          <Monitor className="h-4 w-4 mr-2" />
-                          iFrame
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Embed as an iframe for isolated environments</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Button>
-                        <Button
-                          variant={
-                            embedType === "webcomponent" ? "default" : "outline"
-                          }
-                          onClick={() => setEmbedType("webcomponent")}
-                          className="justify-start"
-                        >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center">
-                          <Layers className="h-4 w-4 mr-2" />
-                          Web Component
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Modern web component implementation</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Button>
-                        <Button
-                          variant={
-                            embedType === "oneline" ? "default" : "outline"
-                          }
-                          onClick={() => setEmbedType("oneline")}
-                          className="justify-start"
-                        >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center">
-                          <Smartphone className="h-4 w-4 mr-2" />
-                          One-Line
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Simplified one-line embed for non-technical users</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Button>
-                        <Button
-                          variant={embedType === "npm" ? "default" : "outline"}
-                          onClick={() => setEmbedType("npm")}
-                          className="justify-start"
-                        >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center">
-                          <Package className="h-4 w-4 mr-2" />
-                          NPM/Yarn
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>NPM/Yarn package installation and usage</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Button>
-                      </div>
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                          <Button
+                            variant={
+                              embedType === "script" ? "default" : "outline"
+                            }
+                            onClick={() => setEmbedType("script")}
+                            className="justify-start"
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center">
+                                  <Code className="h-4 w-4 mr-2" />
+                                  JavaScript
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Standard JavaScript embed code with full
+                                  configuration
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </Button>
+                          <Button
+                            variant={
+                              embedType === "iframe" ? "default" : "outline"
+                            }
+                            onClick={() => setEmbedType("iframe")}
+                            className="justify-start"
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center">
+                                  <Monitor className="h-4 w-4 mr-2" />
+                                  iFrame
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Embed as an iframe for isolated environments
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </Button>
+                          <Button
+                            variant={
+                              embedType === "webcomponent"
+                                ? "default"
+                                : "outline"
+                            }
+                            onClick={() => setEmbedType("webcomponent")}
+                            className="justify-start"
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center">
+                                  <Layers className="h-4 w-4 mr-2" />
+                                  Web Component
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Modern web component implementation</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </Button>
+                          <Button
+                            variant={
+                              embedType === "oneline" ? "default" : "outline"
+                            }
+                            onClick={() => setEmbedType("oneline")}
+                            className="justify-start"
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center">
+                                  <Smartphone className="h-4 w-4 mr-2" />
+                                  One-Line
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Simplified one-line embed for non-technical
+                                  users
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </Button>
+                          <Button
+                            variant={
+                              embedType === "npm" ? "default" : "outline"
+                            }
+                            onClick={() => setEmbedType("npm")}
+                            className="justify-start"
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="flex items-center">
+                                  <Package className="h-4 w-4 mr-2" />
+                                  NPM/Yarn
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>NPM/Yarn package installation and usage</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </Button>
+                        </div>
+                      </TooltipProvider>
 
                       <div className="relative">
                         <div className="bg-slate-800 text-white p-2 rounded-t-md flex justify-between items-center">
                           <div className="flex items-center">
                             <Info className="h-4 w-4 mr-2 text-blue-400" />
                             <span className="text-sm">
-                              {embedType === "script" && "JavaScript Embed Code"}
+                              {embedType === "script" &&
+                                "JavaScript Embed Code"}
                               {embedType === "iframe" && "iFrame Embed Code"}
-                              {embedType === "webcomponent" && "Web Component Embed Code"}
+                              {embedType === "webcomponent" &&
+                                "Web Component Embed Code"}
                               {embedType === "oneline" && "One-Line Embed Code"}
                               {embedType === "npm" && "NPM/Yarn Installation"}
                             </span>
                           </div>
                           <div className="text-xs text-slate-400">
-                            Environment: {environment.charAt(0).toUpperCase() + environment.slice(1)}
+                            Environment:{" "}
+                            {environment.charAt(0).toUpperCase() +
+                              environment.slice(1)}
                           </div>
                         </div>
                         <pre className="bg-slate-900 text-white p-4 rounded-b-md overflow-x-auto text-sm font-mono whitespace-pre-wrap max-h-[400px] overflow-y-auto border-t border-slate-700">
