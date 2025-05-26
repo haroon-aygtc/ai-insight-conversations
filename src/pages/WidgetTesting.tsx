@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -21,12 +20,22 @@ import {
   Eye
 } from 'lucide-react';
 
+interface TestResult {
+  status: 'passed' | 'failed';
+  score: number;
+  timestamp: Date;
+}
+
+interface TestResults {
+  [key: string]: TestResult;
+}
+
 const WidgetTesting = () => {
   const { toast } = useToast();
   const [selectedDevice, setSelectedDevice] = useState('desktop');
   const [environment, setEnvironment] = useState('development');
   const [isTestRunning, setIsTestRunning] = useState(false);
-  const [testResults, setTestResults] = useState({});
+  const [testResults, setTestResults] = useState<TestResults>({});
 
   const devices = {
     mobile: { width: '375px', height: '667px', icon: <Smartphone size={16} /> },
@@ -85,13 +94,13 @@ const WidgetTesting = () => {
     }
   ];
 
-  const runTest = async (scenarioId) => {
+  const runTest = async (scenarioId: string) => {
     setIsTestRunning(true);
     
     // Simulate test execution
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const results = {
+    const results: TestResults = {
       ...testResults,
       [scenarioId]: {
         status: Math.random() > 0.2 ? 'passed' : 'failed',
