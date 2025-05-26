@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,7 +39,10 @@ const WidgetIconSelector: React.FC<WidgetIconSelectorProps> = ({
       <h3 className="text-sm font-medium">Widget Icon</h3>
       <div className="grid grid-cols-4 gap-2">
         {popularIcons.map((iconName) => {
-          const IconComponent = Icons[iconName];
+          const IconComponent = Icons[iconName] as React.ComponentType<{ className?: string }>;
+          
+          if (!IconComponent) return null;
+          
           return (
             <div
               key={iconName}

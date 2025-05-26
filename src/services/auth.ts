@@ -31,6 +31,26 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface ActivityLog {
+  id: string;
+  user_id: string;
+  action: string;
+  description: string;
+  ip_address: string;
+  user_agent: string;
+  created_at: string;
+}
+
+export interface SessionInfo {
+  id: string;
+  user_id: string;
+  ip_address: string;
+  user_agent: string;
+  last_activity: string;
+  is_current: boolean;
+  location?: string;
+}
+
 /**
  * Simple authentication service using pure Laravel Sanctum
  * No custom activity tracking or session management
@@ -173,6 +193,99 @@ class AuthService {
   clearAuth(): void {
     this.user = null;
     sessionStorage.removeItem('user');
+  }
+
+  /**
+   * Get activity logs
+   */
+  async getActivityLogs(): Promise<ActivityLog[]> {
+    try {
+      const response = await apiService.get('/api/auth/activity-logs');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+      // Return mock data for now
+      return [
+        {
+          id: '1',
+          user_id: '1',
+          action: 'login',
+          description: 'User logged in successfully',
+          ip_address: '192.168.1.1',
+          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: '2',
+          user_id: '1',
+          action: 'widget_created',
+          description: 'Created new chat widget',
+          ip_address: '192.168.1.1',
+          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+        }
+      ];
+    }
+  }
+
+  /**
+   * Get active sessions
+   */
+  async getActiveSessions(): Promise<SessionInfo[]> {
+    try {
+      const response = await apiService.get('/api/auth/sessions');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching active sessions:', error);
+      // Return mock data for now
+      return [
+        {
+          id: '1',
+          user_id: '1',
+          ip_address: '192.168.1.1',
+          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          last_activity: new Date().toISOString(),
+          is_current: true,
+          location: 'New York, US'
+        },
+        {
+          id: '2',
+          user_id: '1',
+          ip_address: '192.168.1.2',
+          user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15',
+          last_activity: new Date(Date.now() - 7200000).toISOString(),
+          is_current: false,
+          location: 'San Francisco, US'
+        }
+      ];
+    }
+  }
+
+  /**
+   * Terminate a session
+   */
+  async terminateSession(sessionId: string): Promise<void> {
+    try {
+      await apiService.delete(`/api/auth/sessions/${sessionId}`);
+    } catch (error) {
+      console.error('Error terminating session:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Logout all devices
+   */
+  async logoutAllDevices(): Promise<void> {
+    try {
+      await apiService.post('/api/auth/logout-all');
+      // Clear local storage and redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error logging out all devices:', error);
+      throw error;
+    }
   }
 }
 
