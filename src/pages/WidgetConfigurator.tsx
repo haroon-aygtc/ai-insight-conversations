@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Save, 
   Eye, 
@@ -23,10 +23,10 @@ import {
   ChevronRight,
   Layers
 } from "lucide-react";
-import WidgetAppearanceTab from "@/components/widget-configurator/WidgetAppearanceTab";
-import WidgetBehaviorTab from "@/components/widget-configurator/WidgetBehaviorTab";
-import WidgetContentTab from "@/components/widget-configurator/WidgetContentTab";
-import WidgetEmbeddingTab from "@/components/widget-configurator/WidgetEmbeddingTab";
+import { WidgetAppearanceTab } from "@/components/widget-configurator/WidgetAppearanceTab";
+import { WidgetBehaviorTab } from "@/components/widget-configurator/WidgetBehaviorTab";
+import { WidgetContentTab } from "@/components/widget-configurator/WidgetContentTab";
+import { WidgetEmbeddingTab } from "@/components/widget-configurator/WidgetEmbeddingTab";
 import ModernWidgetPreview from "@/components/widget-configurator/ModernWidgetPreview";
 import { WidgetTestingPlatform } from "@/components/widget-configurator/testing/WidgetTestingPlatform";
 import * as widgetService from "@/services/widgetService";
@@ -762,37 +762,29 @@ const WidgetConfigurator = () => {
                   <TabsContent value="appearance" className="space-y-6 mt-0">
                     <WidgetAppearanceTab
                       config={config.appearance_config}
-                      onChange={(key, value) =>
-                        handleConfigChange("appearance", key, value)
-                      }
+                      onChange={(key, value) => handleConfigChange('appearance', key, value)}
                     />
                   </TabsContent>
 
                   <TabsContent value="behavior" className="space-y-4 mt-0">
                     <WidgetBehaviorTab
                       config={config.behavior_config}
-                      onChange={(key, value) =>
-                        handleConfigChange("behavior", key, value)
-                      }
+                      onChange={(key, value) => handleConfigChange('behavior', key, value)}
                     />
                   </TabsContent>
 
                   <TabsContent value="content" className="space-y-4 mt-0">
                     <WidgetContentTab
                       config={config.content_config}
-                      onChange={(key, value) =>
-                        handleConfigChange("content", key, value)
-                      }
+                      onChange={(key, value) => handleConfigChange('content', key, value)}
                     />
                   </TabsContent>
 
                   <TabsContent value="embedding" className="space-y-4 mt-0">
                     <WidgetEmbeddingTab
                       config={config.embedding_config}
-                      widgetId={config.widget_id || config.embedding_config.widgetId}
-                      onChange={(key, value) =>
-                        handleConfigChange("embedding", key, value)
-                      }
+                      widgetId={config.widget_id || ''}
+                      onChange={(key, value) => handleConfigChange('embedding', key, value)}
                     />
                   </TabsContent>
                 </CardContent>
@@ -806,9 +798,9 @@ const WidgetConfigurator = () => {
                 appearance: config.appearance_config,
                 behavior: config.behavior_config,
                 content: config.content_config,
-                embedding: config.embedding_config
+                embedding: config.embedding_config,
               }}
-              key={`preview-${previewUpdateTrigger}`}
+              key={previewUpdateTrigger}
             />
           </div>
         </div>

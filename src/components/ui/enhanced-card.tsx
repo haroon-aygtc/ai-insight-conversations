@@ -1,7 +1,6 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { motion, HTMLMotionProps } from "framer-motion";
 
 interface EnhancedCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "elevated" | "glass" | "gradient" | "bordered";
@@ -21,27 +20,6 @@ const EnhancedCard = React.forwardRef<HTMLDivElement, EnhancedCardProps>(
 
     const hoverEffects = hover ? "hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" : "";
     const interactiveEffects = interactive ? "cursor-pointer hover:border-primary/20" : "";
-
-    if (interactive) {
-      return (
-        <motion.div
-          ref={ref}
-          className={cn(
-            "rounded-2xl p-6 transition-all duration-300",
-            variants[variant],
-            hoverEffects,
-            interactiveEffects,
-            className
-          )}
-          whileHover={{ y: -4, scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          {...(props as HTMLMotionProps<"div">)}
-        >
-          {children}
-        </motion.div>
-      );
-    }
 
     return (
       <div
