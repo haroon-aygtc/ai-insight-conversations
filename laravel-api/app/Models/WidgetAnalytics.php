@@ -14,17 +14,16 @@ class WidgetAnalytics extends Model
     protected $fillable = [
         'widget_id',
         'event_type',
-        'ip_address',
-        'user_agent',
-        'referrer_url',
         'page_url',
-        'event_data',
-        'session_id',
-        'visitor_id',
+        'user_agent',
+        'referrer',
+        'device_type',
+        'ip_address',
+        'metadata',
     ];
 
     protected $casts = [
-        'event_data' => 'array',
+        'metadata' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -38,11 +37,27 @@ class WidgetAnalytics extends Model
     }
 
     /**
-     * Scope to filter by event type.
+     * Scope to filter analytics by event type.
      */
     public function scopeByEventType($query, string $eventType)
     {
         return $query->where('event_type', $eventType);
+    }
+
+    /**
+     * Scope to filter analytics by date range.
+     */
+    public function scopeInDateRange($query, string $startDate, string $endDate)
+    {
+        return $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    /**
+     * Scope to filter analytics by device type.
+     */
+    public function scopeByDeviceType($query, string $deviceType)
+    {
+        return $query->where('device_type', $deviceType);
     }
 
     /**

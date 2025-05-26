@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seeders will be added here when needed
+        $this->call([
+            FormTemplateSeeder::class,
+        ]);
     }
 }

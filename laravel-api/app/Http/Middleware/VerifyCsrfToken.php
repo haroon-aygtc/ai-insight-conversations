@@ -14,4 +14,12 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         //
     ];
+    
+    /**
+     * Increase the CSRF token lifetime to match the session lifetime
+     * This helps prevent token mismatches when handling large form submissions
+     *
+     * @var int
+     */
+    protected $tokensLifetime = 240; // minutes, matching SESSION_LIFETIME
 }

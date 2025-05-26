@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'auth/*'],
 
     'allowed_methods' => ['*'],
 
@@ -26,15 +26,20 @@ return [
         'http://127.0.0.1:5173',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
+        'http://localhost',
+        'http://127.0.0.1',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        env('FRONTEND_URL', 'http://localhost:5173'),
     ],
 
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['X-XSRF-TOKEN'],
 
-    'max_age' => 0,
+    'max_age' => 7200,
 
     'supports_credentials' => true,
 

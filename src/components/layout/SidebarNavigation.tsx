@@ -14,6 +14,7 @@ import {
   Shield,
   Cloud,
   Sparkles,
+  TestTube,
 } from "lucide-react";
 import {
   SidebarGroup,
@@ -43,9 +44,19 @@ export const SidebarNavigation = () => {
       icon: <MessageSquare size={20} />,
     },
     {
+      label: "Widgets",
+      path: "/widgets",
+      icon: <Box size={20} />,
+    },
+    {
       label: "Widget Configurator",
       path: "/widget-configurator",
       icon: <PanelLeft size={20} />,
+    },
+    {
+      label: "Widget Testing",
+      path: "/widget-testing",
+      icon: <TestTube size={20} />,
     },
     {
       label: "Context Rules",

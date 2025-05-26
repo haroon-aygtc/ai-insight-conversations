@@ -299,6 +299,48 @@ class AuthController extends Controller
             'message' => 'Activity logged successfully',
         ]);
     }
+    
+    /**
+     * Refresh the user's session without redirecting
+     * This is used to silently refresh authentication during widget operations
+     */
+    public function refreshSession(Request $request): JsonResponse
+    {
+        // Get the current user
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+        
+        // Regenerate the session ID to prevent session fixation
+        Session::regenerate();
+        
+        // Update the session expiration time
+        $expiresAt = now()->addMinutes(config('session.lifetime', 240));
+        
+        // Update the user session record
+        UserSession::where('id', session()->getId())
+            ->update([
+                'last_activity' => now()->timestamp,
+                'expires_at' => $expiresAt,
+            ]);
+        
+        // Log this activity
+        $this->recordActivity(
+            $user->id,
+            'session_refreshed',
+            'Session refreshed during widget operation',
+            $request
+        );
+        
+        return response()->json([
+            'message' => 'Session refreshed successfully',
+            'expires_at' => $expiresAt->toISOString(),
+        ]);
+    }
 
     /**
      * Get activity logs.

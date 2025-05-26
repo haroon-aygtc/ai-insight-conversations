@@ -21,7 +21,18 @@ export const LiveEmbedPreview = ({
   widgetId,
   environment,
 }: LiveEmbedPreviewProps) => {
+  // Get the URL to our custom test page
+  const baseUrl = window.location.origin;
+
+  // Serialize the config object to pass it via URL
+  const serializedConfig = encodeURIComponent(JSON.stringify(config));
+
+  // Build the full URL with all parameters
+  const customTestPageUrl = `${baseUrl}/widget-test-page.html?widgetId=${widgetId}&env=${environment}&config=${serializedConfig}`;
+
+  // Keeping the old preview URL as a fallback
   const previewUrl = `https://${environment}-preview.chatadmin.com/preview/${widgetId}`;
+
   const [refreshKey, setRefreshKey] = React.useState(Date.now());
 
   const handleRefresh = () => {
@@ -53,7 +64,7 @@ export const LiveEmbedPreview = ({
               Refresh
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+              <a href={customTestPageUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open
               </a>
@@ -61,14 +72,14 @@ export const LiveEmbedPreview = ({
           </div>
         </div>
         <CardDescription>
-          See how your widget appears on a live website
+          See how your widget appears on a realistic website
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0 overflow-hidden rounded-b-lg">
         <div className="w-full h-[500px] bg-white">
           <iframe
             key={refreshKey}
-            src={`${previewUrl}?t=${refreshKey}`}
+            src={`${customTestPageUrl}&t=${refreshKey}`}
             className="w-full h-full border-none"
             title="Widget Live Preview"
           />

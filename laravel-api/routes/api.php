@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout-all-devices', [AuthController::class, 'logoutAllDevices']);
         Route::post('extend-session', [AuthController::class, 'extendSession']);
         Route::post('update-activity', [AuthController::class, 'updateActivity']);
+        Route::post('refresh', [AuthController::class, 'refreshSession']);
 
         // Session management
         Route::get('sessions', [AuthController::class, 'getActiveSessions']);
@@ -45,6 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Legacy user route for backward compatibility
     Route::get('/user', function (Request $request) {
         return $request->user();
+    });
+    
+    // Form template routes
+    Route::prefix('form-templates')->group(function () {
+        Route::get('/', [App\Http\Controllers\FormTemplateController::class, 'index']);
+        Route::get('/{template}', [App\Http\Controllers\FormTemplateController::class, 'show']);
+        Route::get('/type/{type}/default', [App\Http\Controllers\FormTemplateController::class, 'getDefaultByType']);
     });
 
     // AI routes
@@ -67,7 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{id}/models', [AIProviderController::class, 'getModels']);
             Route::put('/{providerId}/models/{modelId}', [AIProviderController::class, 'updateModel']);
         });
-        
+
         // AI Model Management
         Route::prefix('models')->group(function () {
             Route::get('/', [AIModelController::class, 'index']);
@@ -79,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{id}/test', [AIModelController::class, 'testModel']);
             Route::get('/provider/{providerId}', [AIModelController::class, 'getProviderModels']);
         });
-        
+
         // AI Configuration Management
         Route::prefix('config')->group(function () {
             Route::get('/', [AIConfigController::class, 'index']);
@@ -91,7 +99,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/rate-limits', [AIConfigController::class, 'getRateLimits']);
             Route::put('/rate-limits', [AIConfigController::class, 'updateRateLimits']);
         });
-        
+
         // AI Prompt Template Management
         Route::prefix('prompts')->group(function () {
             Route::get('/', [AIPromptTemplateController::class, 'index']);
@@ -102,4 +110,20 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{id}/render', [AIPromptTemplateController::class, 'render']);
         });
     });
+
+    // Widget routes
+    Route::get('/widgets', [App\Http\Controllers\WidgetController::class, 'index']);
+    Route::post('/widgets', [App\Http\Controllers\WidgetController::class, 'store']);
+    Route::get('/widgets/{id}', [App\Http\Controllers\WidgetController::class, 'show']);
+    Route::put('/widgets/{id}', [App\Http\Controllers\WidgetController::class, 'update']);
+    Route::delete('/widgets/{id}', [App\Http\Controllers\WidgetController::class, 'destroy']);
+    Route::post('/widgets/{id}/publish', [App\Http\Controllers\WidgetController::class, 'publish']);
+    Route::post('/widgets/{id}/unpublish', [App\Http\Controllers\WidgetController::class, 'unpublish']);
+    Route::get('/widgets/{id}/embed-code', [App\Http\Controllers\WidgetController::class, 'getEmbedCode']);
 });
+
+// Public widget routes
+Route::get('/widget/{widgetId}', [App\Http\Controllers\WidgetPublicController::class, 'show']);
+Route::get('/widget/{widgetId}/script.js', [App\Http\Controllers\WidgetPublicController::class, 'script']);
+Route::post('/widget/{widgetId}/chat', [App\Http\Controllers\WidgetPublicController::class, 'chat']);
+Route::post('/widget/{widgetId}/analytics', [App\Http\Controllers\WidgetPublicController::class, 'recordAnalytics']);

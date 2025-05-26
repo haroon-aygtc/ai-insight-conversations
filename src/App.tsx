@@ -16,6 +16,10 @@ import Register from "./pages/auth/Register";
 import Dashboard from "./pages/Dashboard";
 import Chat from "./pages/Chat";
 import WidgetConfigurator from "./pages/WidgetConfigurator";
+import WidgetListing from "./pages/WidgetListing";
+import WidgetPreview from "./pages/WidgetPreview";
+import WidgetTesting from "./pages/WidgetTesting";
+import WidgetTestingDemo from "./pages/WidgetTestingDemo";
 import ContextRules from "./pages/ContextRules";
 import AiModule from "./components/ai-module/AiModule";
 import Templates from "./pages/Templates";
@@ -138,6 +142,97 @@ const App = () => (
                       <MainLayout>
                         <AnimatedRoute>
                           <WidgetConfigurator />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widgets"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetListing />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widgets/new"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetConfigurator />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widgets/edit/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetConfigurator />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widgets/preview/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetPreview />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/widget-testing"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetTesting />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/widget-testing/:id"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetTesting />
+                        </AnimatedRoute>
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/widget-testing-demo"
+                  element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <AnimatedRoute>
+                          <WidgetTestingDemo />
                         </AnimatedRoute>
                       </MainLayout>
                     </ProtectedRoute>

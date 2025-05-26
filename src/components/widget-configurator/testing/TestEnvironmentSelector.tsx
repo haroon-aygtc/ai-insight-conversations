@@ -38,7 +38,7 @@ export const TestEnvironmentSelector = ({
           onValueChange={onEnvironmentChange}
           className="space-y-3"
         >
-          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50">
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50 development-option">
             <RadioGroupItem value="development" id="env-dev" />
             <div className="flex-1">
               <div className="flex items-center">
@@ -53,7 +53,7 @@ export const TestEnvironmentSelector = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50">
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50 staging-option">
             <RadioGroupItem value="staging" id="env-staging" />
             <div className="flex-1">
               <div className="flex items-center">
@@ -78,7 +78,7 @@ export const TestEnvironmentSelector = ({
             </TooltipProvider>
           </div>
 
-          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50">
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-slate-50 production-option">
             <RadioGroupItem value="production" id="env-prod" />
             <div className="flex-1">
               <div className="flex items-center">

@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+import apiService from './api';
 
 export interface AIModel {
     id: string;
@@ -25,8 +23,8 @@ export interface AIProvider {
 // Get all providers
 export const getProviders = async (): Promise<AIProvider[]> => {
     try {
-        const response = await axios.get(`${API_URL}/ai/providers`);
-        return response.data.providers;
+        const response = await apiService.get('/ai/providers');
+        return response.data?.providers || [];
     } catch (error) {
         console.error('Error fetching providers:', error);
         throw error;
@@ -36,8 +34,8 @@ export const getProviders = async (): Promise<AIProvider[]> => {
 // Get a single provider by ID
 export const getProviderById = async (id: string): Promise<AIProvider> => {
     try {
-        const response = await axios.get(`${API_URL}/ai/providers/${id}`);
-        return response.data.provider;
+        const response = await apiService.get(`/ai/providers/${id}`);
+        return response.data?.provider;
     } catch (error) {
         console.error(`Error fetching provider ${id}:`, error);
         throw error;
@@ -47,8 +45,8 @@ export const getProviderById = async (id: string): Promise<AIProvider> => {
 // Create a new provider
 export const createProvider = async (provider: Omit<AIProvider, 'id'>): Promise<AIProvider> => {
     try {
-        const response = await axios.post(`${API_URL}/ai/providers`, provider);
-        return response.data.provider;
+        const response = await apiService.post('/ai/providers', provider);
+        return response.data?.provider;
     } catch (error) {
         console.error('Error creating provider:', error);
         throw error;
@@ -58,8 +56,8 @@ export const createProvider = async (provider: Omit<AIProvider, 'id'>): Promise<
 // Update a provider
 export const updateProvider = async (id: string, provider: Partial<AIProvider>): Promise<AIProvider> => {
     try {
-        const response = await axios.put(`${API_URL}/ai/providers/${id}`, provider);
-        return response.data.provider;
+        const response = await apiService.put(`/ai/providers/${id}`, provider);
+        return response.data?.provider;
     } catch (error) {
         console.error(`Error updating provider ${id}:`, error);
         throw error;
@@ -69,7 +67,7 @@ export const updateProvider = async (id: string, provider: Partial<AIProvider>):
 // Delete a provider
 export const deleteProvider = async (id: string): Promise<void> => {
     try {
-        await axios.delete(`${API_URL}/ai/providers/${id}`);
+        await apiService.delete(`/ai/providers/${id}`);
     } catch (error) {
         console.error(`Error deleting provider ${id}:`, error);
         throw error;
@@ -79,8 +77,8 @@ export const deleteProvider = async (id: string): Promise<void> => {
 // Set a provider as default
 export const setDefaultProvider = async (id: string): Promise<AIProvider> => {
     try {
-        const response = await axios.post(`${API_URL}/ai/providers/${id}/default`);
-        return response.data.provider;
+        const response = await apiService.post(`/ai/providers/${id}/default`);
+        return response.data?.provider;
     } catch (error) {
         console.error(`Error setting provider ${id} as default:`, error);
         throw error;
@@ -90,14 +88,14 @@ export const setDefaultProvider = async (id: string): Promise<AIProvider> => {
 // Test a provider's connection
 export const testProviderConnection = async (id: string): Promise<{ success: boolean; message: string }> => {
     try {
-        const response = await axios.post(`${API_URL}/ai/providers/${id}/test-connection`);
-        return response.data;
+        const response = await apiService.post(`/ai/providers/${id}/test-connection`);
+        return response.data || { success: false, message: 'No response data' };
     } catch (error) {
         console.error(`Error testing provider ${id} connection:`, error);
-        if (axios.isAxiosError(error) && error.response) {
+        if (error instanceof Error) {
             return {
                 success: false,
-                message: error.response.data.message || 'Connection test failed',
+                message: error.message || 'Connection test failed',
             };
         }
         throw error;
@@ -107,8 +105,8 @@ export const testProviderConnection = async (id: string): Promise<{ success: boo
 // Get all models for a provider
 export const getProviderModels = async (id: string): Promise<AIModel[]> => {
     try {
-        const response = await axios.get(`${API_URL}/ai/providers/${id}/models`);
-        return response.data.models;
+        const response = await apiService.get(`/ai/providers/${id}/models`);
+        return response.data?.models || [];
     } catch (error) {
         console.error(`Error fetching models for provider ${id}:`, error);
         throw error;
@@ -122,8 +120,8 @@ export const updateModel = async (
     model: Partial<AIModel>
 ): Promise<AIModel> => {
     try {
-        const response = await axios.put(`${API_URL}/ai/providers/${providerId}/models/${modelId}`, model);
-        return response.data.model;
+        const response = await apiService.put(`/ai/providers/${providerId}/models/${modelId}`, model);
+        return response.data?.model;
     } catch (error) {
         console.error(`Error updating model ${modelId}:`, error);
         throw error;
@@ -140,4 +138,4 @@ export default {
     testProviderConnection,
     getProviderModels,
     updateModel,
-}; 
+};

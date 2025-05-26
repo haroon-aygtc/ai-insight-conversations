@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, LoginCredentials, RegisterData, authService } from '@/services/auth';
-import SessionWarningDialog from '@/components/auth/SessionWarningDialog';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,13 +7,9 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  sessionTimeRemaining: number;
-  isSessionExpiringSoon: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  logoutAllDevices: () => Promise<void>;
-  extendSession: (minutes?: number) => Promise<void>;
   hasRole: (role: string) => boolean;
   hasPermission: (permission: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
@@ -30,9 +25,6 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [sessionTimeRemaining, setSessionTimeRemaining] = useState(0);
-  const [isSessionExpiringSoon, setIsSessionExpiringSoon] = useState(false);
-  const [showSessionWarning, setShowSessionWarning] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -40,21 +32,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Update session time remaining periodically
-  useEffect(() => {
-    if (!user) return;
-
-    const updateSessionTime = () => {
-      const timeRemaining = authService.getSessionTimeRemaining();
-      setSessionTimeRemaining(timeRemaining);
-      setIsSessionExpiringSoon(authService.isSessionExpiringSoon());
-    };
-
-    updateSessionTime();
-    const interval = setInterval(updateSessionTime, 30000); // Update every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [user]);
+  // With pure Laravel Sanctum, we don't need to track session time manually
+  // Session management is handled by the server
 
   const handleSessionExpired = () => {
     toast({
@@ -62,43 +41,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       description: "Your session has expired. Please log in again.",
       variant: "destructive",
     });
-    setUser(null);
+    logout();
     navigate('/login');
   };
 
   const initializeAuth = async () => {
     try {
-      const storedUser = authService.getStoredUser();
-
-      if (storedUser) {
-        setUser(storedUser);
-
-        // Start session monitoring
-        authService.startSessionMonitoring();
-
-        // Set up session callbacks
-        authService.setSessionWarningCallback(() => {
-          setShowSessionWarning(true);
-        });
-
-        authService.setSessionExpiredCallback(() => {
-          handleSessionExpired();
-        });
-
-        // Try to verify the session is still valid
-        try {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-        } catch (error) {
-          // Session expired or invalid, clear stored data
-          console.error('Session validation failed:', error);
-          authService.clearAuth();
-          setUser(null);
-        }
-      }
+      setIsLoading(true);
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
     } catch (error) {
-      console.error('Auth initialization failed:', error);
-      authService.clearAuth();
+      console.error('Error initializing auth:', error);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -106,11 +59,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (credentials: LoginCredentials) => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const user = await authService.login(credentials);
       setUser(user);
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${user.first_name}!`,
+      });
+      navigate('/');
     } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: error.message || "Invalid credentials. Please try again.",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -118,11 +82,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (data: RegisterData) => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const user = await authService.register(data);
       setUser(user);
+      toast({
+        title: "Registration Successful",
+        description: `Welcome, ${user.first_name}!`,
+      });
+      navigate('/');
     } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Could not create account. Please try again.",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -130,40 +105,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       await authService.logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
       setUser(null);
-      setIsLoading(false);
-    }
-  };
-
-  const logoutAllDevices = async () => {
-    setIsLoading(true);
-    try {
-      await authService.logoutAllDevices();
+      navigate('/login');
     } catch (error) {
-      console.error('Logout all devices failed:', error);
-      throw error;
+      console.error('Logout error:', error);
     } finally {
-      setUser(null);
       setIsLoading(false);
-    }
-  };
-
-  const extendSession = async (minutes: number = 30) => {
-    try {
-      await authService.extendSession(minutes);
-      // Update session time after extension
-      const timeRemaining = authService.getSessionTimeRemaining();
-      setSessionTimeRemaining(timeRemaining);
-      setIsSessionExpiringSoon(authService.isSessionExpiringSoon());
-    } catch (error) {
-      console.error('Session extension failed:', error);
-      throw error;
     }
   };
 
@@ -187,13 +137,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated: !!user,
     isLoading,
-    sessionTimeRemaining,
-    isSessionExpiringSoon,
     login,
     register,
     logout,
-    logoutAllDevices,
-    extendSession,
     hasRole,
     hasPermission,
     hasAnyRole,
@@ -203,11 +149,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <SessionWarningDialog
-        isOpen={showSessionWarning}
-        onClose={() => setShowSessionWarning(false)}
-        onLogout={logout}
-      />
     </AuthContext.Provider>
   );
 };

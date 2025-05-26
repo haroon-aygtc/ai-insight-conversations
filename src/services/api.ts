@@ -9,18 +9,31 @@ interface ApiResponse<T = any> {
 class ApiService {
   private baseURL: string;
   private sanctumURL: string;
+  private csrfTokenPromise: Promise<void> | null = null;
+  private lastCsrfTokenFetch: number = 0;
+  private readonly CSRF_TOKEN_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+  private retryCount: number = 0;
+  private readonly MAX_RETRIES: number = 3;
 
   constructor(baseURL: string, sanctumURL: string) {
     this.baseURL = baseURL;
     this.sanctumURL = sanctumURL;
   }
 
-  // Get CSRF token for Laravel Sanctum
-  async getCsrfToken(): Promise<void> {
+  // Get CSRF token for Laravel Sanctum - simplified version
+  async getCsrfToken(forceRefresh = false): Promise<void> {
     try {
+      console.log('Fetching CSRF token from:', `${this.sanctumURL}/sanctum/csrf-cookie`);
+
       const response = await fetch(`${this.sanctumURL}/sanctum/csrf-cookie`, {
         method: 'GET',
-        credentials: 'include',
+        credentials: 'include', // This is critical for cookies
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        mode: 'cors',
+        cache: 'no-cache'
       });
 
       if (!response.ok) {
@@ -28,7 +41,42 @@ class ApiService {
         throw new Error(`Failed to get CSRF token: ${response.status}`);
       }
 
-      console.log('CSRF token request successful');
+      // Give browser time to set the cookie
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Update last fetch time
+      this.lastCsrfTokenFetch = Date.now();
+    } catch (error) {
+      console.error('Error getting CSRF token:', error);
+      throw error;
+    }
+  }
+
+  private async fetchCsrfToken(): Promise<void> {
+    try {
+      console.log('Fetching CSRF token from:', `${this.sanctumURL}/sanctum/csrf-cookie`);
+
+      const response = await fetch(`${this.sanctumURL}/sanctum/csrf-cookie`, {
+        method: 'GET',
+        credentials: 'include', // This is critical for cookies
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+
+      if (!response.ok) {
+        console.error('Failed to get CSRF token:', response.status, response.statusText);
+        throw new Error(`Failed to get CSRF token: ${response.status}`);
+      }
+
+      // Give browser time to set the cookie
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Debug - log cookies after token fetch
+      this.debugCookies();
     } catch (error) {
       console.error('Error getting CSRF token:', error);
       throw error;
@@ -38,7 +86,13 @@ class ApiService {
   // Debug method to check current cookies
   debugCookies(): void {
     console.log('Current cookies:', document.cookie);
-    console.log('XSRF-TOKEN:', this.getCookie('XSRF-TOKEN'));
+    const xsrfTokenPromise = this.getCookie('XSRF-TOKEN');
+    xsrfTokenPromise.then(token => {
+      console.log('XSRF-TOKEN:', token ? `${token.substring(0, 10)}...` : 'Not found');
+    });
+    this.getCookie('laravel_session').then(session => {
+      console.log('laravel_session:', session ? 'Present' : 'Not found');
+    });
   }
 
   async getCookie(name: string): Promise<string | null> {
@@ -51,7 +105,6 @@ class ApiService {
     }
     return null;
   }
-
 
   private async request<T>(
     endpoint: string,
@@ -70,36 +123,76 @@ class ApiService {
     // Only add CSRF token if it exists
     if (csrfToken) {
       headers['X-XSRF-TOKEN'] = csrfToken;
+    } else {
+      // Get a fresh token if we don't have one
+      await this.getCsrfToken(true);
+      const freshToken = await this.getCookie('XSRF-TOKEN');
+      if (freshToken) {
+        headers['X-XSRF-TOKEN'] = freshToken;
+      }
     }
 
     const config: RequestInit = {
       headers,
       credentials: 'include', // Always include cookies
+      mode: 'cors',
       ...options,
     };
 
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, config);
 
+      // Parse the response
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        responseData = null;
+      }
+
       if (!response.ok) {
+        // Create a standard error object
+        const error: any = new Error(
+          responseData?.message || `Server error: ${response.status}`
+        );
+        
+        // Add response data to the error object
+        error.status = response.status;
+        error.response = {
+          status: response.status,
+          data: responseData
+        };
+
+        // Handle unauthorized errors (401)
         if (response.status === 401) {
-          // Clear any stored user data and redirect to login
+          // Clear user data from storage
           sessionStorage.removeItem('user');
-          window.location.href = '/login';
-          throw new Error('Unauthorized');
+          
+          // Don't redirect automatically - let the calling code handle the error
+          // This prevents unexpected redirects during form submissions
+          console.error('Authentication error: User is not authenticated');
+          error.isAuthError = true;
         }
 
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'An error occurred');
-      }
+        if (response.status === 419) {
+          error.message = 'CSRF token mismatch';
+          // Get a fresh token and redirect to login
+          await this.getCsrfToken(true);
+          window.location.href = '/login';
+        }
 
-      const data = await response.json();
-      return { data };
-    } catch (error) {
-      if (error instanceof Error) {
+        if (response.status === 422 && responseData?.errors) {
+          // Validation errors
+          error.message = 'Validation failed';
+        }
+
         throw error;
       }
-      throw new Error('Network error occurred');
+
+      return { data: responseData };
+    } catch (error) {
+      console.error('API request error:', error);
+      throw error;
     }
   }
 
@@ -129,34 +222,11 @@ class ApiService {
     endpoint: string,
     options: RequestInit
   ): Promise<ApiResponse<T>> {
-    // Get CSRF token before making the request
+    // Always get a fresh CSRF token before mutating requests
     await this.getCsrfToken();
-
-    // Wait a bit to ensure the cookie is set
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Debug: Check if token is available
-    const token = await this.getCookie('XSRF-TOKEN');
-    console.log('CSRF token before request:', token ? 'Present' : 'Missing');
-
-    try {
-      return await this.request<T>(endpoint, options);
-    } catch (error) {
-      // If CSRF error, try once more with fresh token
-      if (error instanceof Error && (error.message.includes('CSRF') || error.message.includes('token mismatch'))) {
-        console.log('CSRF error detected, retrying with fresh token...');
-        this.debugCookies();
-
-        await this.getCsrfToken();
-        await new Promise(resolve => setTimeout(resolve, 200)); // Longer wait
-
-        const retryToken = await this.getCookie('XSRF-TOKEN');
-        console.log('CSRF token after retry:', retryToken ? 'Present' : 'Missing');
-
-        return await this.request<T>(endpoint, options);
-      }
-      throw error;
-    }
+    
+    // Make the request
+    return await this.request<T>(endpoint, options);
   }
 }
 

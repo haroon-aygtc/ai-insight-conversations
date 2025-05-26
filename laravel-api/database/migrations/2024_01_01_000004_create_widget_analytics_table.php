@@ -14,18 +14,16 @@ return new class extends Migration
         Schema::create('widget_analytics', function (Blueprint $table) {
             $table->id();
             $table->foreignId('widget_id')->constrained()->onDelete('cascade');
-            $table->string('event_type'); // view, interaction, message_sent, etc.
-            $table->ipAddress('ip_address');
-            $table->text('user_agent');
-            $table->string('referrer_url')->nullable();
-            $table->string('page_url')->nullable();
-            $table->json('event_data')->nullable(); // Additional event-specific data
-            $table->string('session_id')->nullable();
-            $table->string('visitor_id')->nullable(); // For tracking unique visitors
+            $table->string('event_type'); // view, open, close, message, feedback
+            $table->string('page_url');
+            $table->string('user_agent')->nullable();
+            $table->string('referrer')->nullable();
+            $table->string('device_type')->nullable();
+            $table->string('ip_address')->nullable();
+            $table->json('metadata')->nullable(); // Additional event-specific data
             $table->timestamps();
 
-            $table->index(['widget_id', 'event_type', 'created_at']);
-            $table->index(['visitor_id', 'session_id']);
+            $table->index(['widget_id', 'event_type']);
             $table->index('created_at');
         });
     }
