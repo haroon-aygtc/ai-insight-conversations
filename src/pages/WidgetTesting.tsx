@@ -1,327 +1,159 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Monitor, 
-  Smartphone, 
-  Tablet, 
-  Play, 
-  RotateCcw, 
-  CheckCircle, 
-  XCircle, 
-  Clock,
-  Zap,
-  Shield,
-  Eye
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { widgetService } from '@/services/widgetService';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowLeft, Settings } from 'lucide-react';
+import { WidgetTestingContainer } from '@/components/widget-configurator/testing/WidgetTestingContainer';
 
-interface TestResult {
-  status: 'passed' | 'failed';
-  score: number;
-  timestamp: Date;
-}
-
-interface TestResults {
-  [key: string]: TestResult;
-}
-
-const WidgetTesting = () => {
+export default function WidgetTesting() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedDevice, setSelectedDevice] = useState('desktop');
-  const [environment, setEnvironment] = useState('development');
-  const [isTestRunning, setIsTestRunning] = useState(false);
-  const [testResults, setTestResults] = useState<TestResults>({});
+  const [loading, setLoading] = useState(true);
+  const [widget, setWidget] = useState<any>(null);
+  const [widgets, setWidgets] = useState<any[]>([]);
+  const [selectedWidgetId, setSelectedWidgetId] = useState<string>(id || '');
 
-  const devices = {
-    mobile: { width: '375px', height: '667px', icon: <Smartphone size={16} /> },
-    tablet: { width: '768px', height: '1024px', icon: <Tablet size={16} /> },
-    desktop: { width: '100%', height: '600px', icon: <Monitor size={16} /> }
-  };
+  // Fetch all widgets on component mount
+  useEffect(() => {
+    fetchWidgets();
+  }, []);
 
-  const testScenarios = [
-    {
-      id: 'functional',
-      name: 'Functional Tests',
-      icon: <CheckCircle size={16} />,
-      tests: [
-        'Widget loads correctly',
-        'Chat window opens/closes',
-        'Messages can be sent',
-        'Response time is acceptable',
-        'Error handling works'
-      ]
-    },
-    {
-      id: 'visual',
-      name: 'Visual Tests',
-      icon: <Eye size={16} />,
-      tests: [
-        'Widget appears in correct position',
-        'Colors match configuration',
-        'Fonts render correctly',
-        'Responsive design works',
-        'Animations are smooth'
-      ]
-    },
-    {
-      id: 'performance',
-      name: 'Performance Tests',
-      icon: <Zap size={16} />,
-      tests: [
-        'Load time under 3 seconds',
-        'Memory usage is optimal',
-        'No JavaScript errors',
-        'Smooth scrolling',
-        'Efficient API calls'
-      ]
-    },
-    {
-      id: 'security',
-      name: 'Security Tests',
-      icon: <Shield size={16} />,
-      tests: [
-        'XSS protection active',
-        'HTTPS connections only',
-        'Data sanitization works',
-        'No sensitive data exposure',
-        'CORS policies enforced'
-      ]
+  // Fetch specific widget when ID changes
+  useEffect(() => {
+    if (selectedWidgetId) {
+      fetchWidget(selectedWidgetId);
     }
-  ];
+  }, [selectedWidgetId]);
 
-  const runTest = async (scenarioId: string) => {
-    setIsTestRunning(true);
-    
-    // Simulate test execution
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const results: TestResults = {
-      ...testResults,
-      [scenarioId]: {
-        status: Math.random() > 0.2 ? 'passed' : 'failed',
-        score: Math.floor(Math.random() * 30) + 70,
-        timestamp: new Date()
+  // Fetch all widgets
+  const fetchWidgets = async () => {
+    try {
+      setLoading(true);
+      const data = await widgetService.getWidgets();
+      // Ensure data is an array
+      const widgetsArray = Array.isArray(data) ? data : [];
+      setWidgets(widgetsArray);
+      
+      // If no widget ID is provided in URL, select the first widget
+      if (!id && widgetsArray.length > 0) {
+        setSelectedWidgetId(String(widgetsArray[0].id));
+        navigate(`/widget-testing/${widgetsArray[0].id}`, { replace: true });
       }
-    };
-    
-    setTestResults(results);
-    setIsTestRunning(false);
-    
-    toast({
-      title: "Test Completed",
-      description: `${scenarioId} tests have finished running.`,
-    });
+    } catch (error) {
+      console.error('Error fetching widgets:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load widgets. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const runAllTests = async () => {
-    for (const scenario of testScenarios) {
-      await runTest(scenario.id);
+  // Fetch specific widget
+  const fetchWidget = async (widgetId: string) => {
+    try {
+      setLoading(true);
+      const data = await widgetService.getWidget(widgetId);
+      setWidget(data);
+    } catch (error) {
+      console.error(`Error fetching widget ${widgetId}:`, error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load widget. Please try again.',
+        variant: 'destructive',
+      });
+      // Redirect to widgets list if widget not found
+      navigate('/widgets');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Handle widget selection change
+  const handleWidgetChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newWidgetId = event.target.value;
+    setSelectedWidgetId(newWidgetId);
+    navigate(`/widget-testing/${newWidgetId}`);
   };
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-800">Widget Testing Platform</h2>
-          <p className="text-slate-500 mt-1">Test your chat widget in different environments and scenarios</p>
-        </div>
-        <div className="flex gap-3">
-          <Select value={environment} onValueChange={setEnvironment}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="development">Development</SelectItem>
-              <SelectItem value="staging">Staging</SelectItem>
-              <SelectItem value="production">Production</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={runAllTests} disabled={isTestRunning}>
-            {isTestRunning ? <Clock className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-            Run All Tests
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/widgets')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to Widgets
           </Button>
+          <h1 className="text-2xl font-bold">Widget Testing</h1>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="preview" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="preview">Live Preview</TabsTrigger>
-              <TabsTrigger value="scenarios">Test Scenarios</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="preview" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Widget Preview
-                    <div className="flex items-center gap-2">
-                      {Object.entries(devices).map(([key, device]) => (
-                        <Button
-                          key={key}
-                          variant={selectedDevice === key ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setSelectedDevice(key)}
-                          className="flex items-center gap-1"
-                        >
-                          {device.icon}
-                          {key.charAt(0).toUpperCase() + key.slice(1)}
-                        </Button>
-                      ))}
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="border rounded-lg bg-slate-50 p-4">
-                    <div 
-                      className="mx-auto bg-white border rounded-lg shadow-sm relative"
-                      style={{
-                        width: devices[selectedDevice].width,
-                        height: devices[selectedDevice].height,
-                        maxWidth: '100%'
-                      }}
-                    >
-                      <div className="p-4 h-full flex items-center justify-center text-slate-500">
-                        <div className="text-center">
-                          <Monitor className="mx-auto mb-2" size={32} />
-                          <p>Widget Preview Area</p>
-                          <p className="text-sm">Environment: {environment}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Mock Widget Button */}
-                      <div className="absolute bottom-4 right-4">
-                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer hover:bg-blue-600 transition-colors">
-                          💬
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="scenarios" className="space-y-4">
-              <div className="grid gap-4">
-                {testScenarios.map((scenario) => (
-                  <Card key={scenario.id}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {scenario.icon}
-                          {scenario.name}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {testResults[scenario.id] && (
-                            <Badge variant={testResults[scenario.id].status === 'passed' ? 'default' : 'destructive'}>
-                              {testResults[scenario.id].status === 'passed' ? <CheckCircle size={12} className="mr-1" /> : <XCircle size={12} className="mr-1" />}
-                              {testResults[scenario.id].status}
-                            </Badge>
-                          )}
-                          <Button 
-                            size="sm" 
-                            onClick={() => runTest(scenario.id)}
-                            disabled={isTestRunning}
-                          >
-                            {isTestRunning ? <Clock className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-                            Run Test
-                          </Button>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {scenario.tests.map((test, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 rounded bg-slate-50">
-                            <span className="text-sm">{test}</span>
-                            {testResults[scenario.id] && (
-                              <Badge variant="outline" className="text-xs">
-                                {Math.random() > 0.1 ? 'Pass' : 'Fail'}
-                              </Badge>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Metrics</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Load Time</span>
-                  <span>2.1s</span>
-                </div>
-                <Progress value={75} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Memory Usage</span>
-                  <span>4.2MB</span>
-                </div>
-                <Progress value={60} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Response Time</span>
-                  <span>0.8s</span>
-                </div>
-                <Progress value={90} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Error Rate</span>
-                  <span>0.1%</span>
-                </div>
-                <Progress value={95} className="h-2" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Test History</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {Object.entries(testResults).map(([scenarioId, result]) => (
-                <div key={scenarioId} className="flex items-center justify-between p-2 rounded bg-slate-50">
-                  <span className="text-sm capitalize">{scenarioId}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={result.status === 'passed' ? 'default' : 'destructive'} className="text-xs">
-                      {result.score}%
-                    </Badge>
-                  </div>
-                </div>
+        
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <label htmlFor="widget-select" className="text-sm font-medium">
+              Select Widget:
+            </label>
+            <select
+              id="widget-select"
+              value={selectedWidgetId}
+              onChange={handleWidgetChange}
+              className="border rounded px-3 py-1.5 text-sm"
+              disabled={loading}
+            >
+              {widgets.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
               ))}
-              
-              {Object.keys(testResults).length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-4">No tests run yet</p>
-              )}
-            </CardContent>
-          </Card>
+            </select>
+          </div>
+          
+          {selectedWidgetId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/widgets/edit/${selectedWidgetId}`)}
+            >
+              <Settings className="h-4 w-4 mr-1" />
+              Edit Widget
+            </Button>
+          )}
         </div>
       </div>
+
+      {loading ? (
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-1/3" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[400px] w-full" />
+          </CardContent>
+        </Card>
+      ) : widget ? (
+        <WidgetTestingContainer
+          widgetId={String(widget.id)}
+          config={widget}
+          initialTab="iframe"
+        />
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">
+              No widget selected. Please select a widget to test.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
-};
-
-export default WidgetTesting;
+}
