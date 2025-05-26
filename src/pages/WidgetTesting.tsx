@@ -1,12 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { widgetService } from '@/services/widgetService';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Settings } from 'lucide-react';
-import { WidgetTestingContainer } from '@/components/widget-configurator/testing/WidgetTestingContainer';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { widgetService } from "@/services/widgetService";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ArrowLeft,
+  Settings,
+  Code,
+  Eye,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Copy,
+  Check,
+  ExternalLink,
+  RefreshCw,
+  Layers,
+  Package,
+  Info,
+} from "lucide-react";
+import { WidgetTestingContainer } from "@/components/widget-configurator/testing/WidgetTestingContainer";
+import { WidgetPreview } from "@/components/widget-configurator/WidgetPreview";
+import {
+  generateScriptEmbed,
+  generateIframeEmbed,
+  generateWebComponentEmbed,
+  generateOneLineEmbed,
+  generateNpmInstallCommand,
+} from "@/utils/embedCodeGenerator";
+import { motion } from "framer-motion";
 
 export default function WidgetTesting() {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +55,12 @@ export default function WidgetTesting() {
   const [loading, setLoading] = useState(true);
   const [widget, setWidget] = useState<any>(null);
   const [widgets, setWidgets] = useState<any[]>([]);
-  const [selectedWidgetId, setSelectedWidgetId] = useState<string>(id || '');
+  const [selectedWidgetId, setSelectedWidgetId] = useState<string>(id || "");
+  const [activeTab, setActiveTab] = useState("preview");
+  const [embedType, setEmbedType] = useState("script");
+  const [environment, setEnvironment] = useState("development");
+  const [copied, setCopied] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(Date.now());
 
   // Fetch all widgets on component mount
   useEffect(() => {
@@ -37,18 +82,18 @@ export default function WidgetTesting() {
       // Ensure data is an array
       const widgetsArray = Array.isArray(data) ? data : [];
       setWidgets(widgetsArray);
-      
+
       // If no widget ID is provided in URL, select the first widget
       if (!id && widgetsArray.length > 0) {
         setSelectedWidgetId(String(widgetsArray[0].id));
         navigate(`/widget-testing/${widgetsArray[0].id}`, { replace: true });
       }
     } catch (error) {
-      console.error('Error fetching widgets:', error);
+      console.error("Error fetching widgets:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to load widgets. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to load widgets. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -64,59 +109,128 @@ export default function WidgetTesting() {
     } catch (error) {
       console.error(`Error fetching widget ${widgetId}:`, error);
       toast({
-        title: 'Error',
-        description: 'Failed to load widget. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to load widget. Please try again.",
+        variant: "destructive",
       });
       // Redirect to widgets list if widget not found
-      navigate('/widgets');
+      navigate("/widgets");
     } finally {
       setLoading(false);
     }
   };
 
   // Handle widget selection change
-  const handleWidgetChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newWidgetId = event.target.value;
-    setSelectedWidgetId(newWidgetId);
-    navigate(`/widget-testing/${newWidgetId}`);
+  const handleWidgetChange = (value: string) => {
+    setSelectedWidgetId(value);
+    navigate(`/widget-testing/${value}`);
+    setRefreshKey(Date.now());
+  };
+
+  // Handle environment change
+  const handleEnvironmentChange = (value: string) => {
+    setEnvironment(value);
+  };
+
+  // Generate embed code based on selected type
+  const getEmbedCode = () => {
+    if (!widget) return "";
+
+    const widgetId = String(widget.id);
+    const config = {
+      appearance: widget.appearance_config || {},
+      behavior: widget.behavior_config || {},
+      content: widget.content_config || {},
+      embedding: widget.embedding_config || {},
+      // Include any additional configuration sections
+      allowedDomains: widget.embedding_config?.allowedDomains || "*",
+      isActive: widget.is_active !== false,
+      isPublished: widget.is_published === true,
+      widgetName: widget.name || "AI Chat Widget",
+      lastUpdated: widget.updated_at || new Date().toISOString()
+    };
+
+    switch (embedType) {
+      case "script":
+        return generateScriptEmbed(widgetId, config, environment);
+      case "iframe":
+        return generateIframeEmbed(widgetId, config, environment);
+      case "webcomponent":
+        return generateWebComponentEmbed(widgetId, config, environment);
+      case "oneline":
+        return generateOneLineEmbed(widgetId, environment, config);
+      case "npm":
+        return generateNpmInstallCommand(widgetId, config);
+      default:
+        return generateScriptEmbed(widgetId, config, environment);
+    }
+  };
+
+  // Copy embed code to clipboard
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(getEmbedCode());
+    setCopied(true);
+    toast({
+      title: "Copied!",
+      description: "Embed code copied to clipboard",
+    });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Refresh the preview
+  const handleRefresh = () => {
+    setRefreshKey(Date.now());
+  };
+
+  // Get environment badge color
+  const getEnvironmentBadgeColor = () => {
+    switch (environment) {
+      case "production":
+        return "bg-red-500 hover:bg-red-600";
+      case "staging":
+        return "bg-amber-500 hover:bg-amber-600";
+      default:
+        return "bg-blue-500 hover:bg-blue-600";
+    }
   };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/widgets')}
+            onClick={() => navigate("/widgets")}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Widgets
           </Button>
-          <h1 className="text-2xl font-bold">Widget Testing</h1>
+          <h1 className="text-2xl font-bold">Widget Preview & Embed Center</h1>
         </div>
-        
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <label htmlFor="widget-select" className="text-sm font-medium">
-              Select Widget:
-            </label>
-            <select
-              id="widget-select"
-              value={selectedWidgetId}
-              onChange={handleWidgetChange}
-              className="border rounded px-3 py-1.5 text-sm"
-              disabled={loading}
-            >
-              {widgets.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            Testing Center
+          </Badge>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select value={selectedWidgetId} onValueChange={handleWidgetChange}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Select Widget" />
+              </SelectTrigger>
+              <SelectContent>
+                {widgets.map((w) => (
+                  <SelectItem key={w.id} value={String(w.id)}>
+                    {w.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          
+
           {selectedWidgetId && (
             <Button
               variant="outline"
@@ -140,16 +254,413 @@ export default function WidgetTesting() {
           </CardContent>
         </Card>
       ) : widget ? (
-        <WidgetTestingContainer
-          widgetId={String(widget.id)}
-          config={widget}
-          initialTab="iframe"
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content Area */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Tabs Navigation */}
+            <Card>
+              <CardHeader className="pb-0">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="w-full"
+                >
+                  <TabsList className="grid grid-cols-3 mb-4">
+                    <TabsTrigger
+                      value="preview"
+                      className="flex items-center gap-1"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Preview
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="embed"
+                      className="flex items-center gap-1"
+                    >
+                      <Code className="h-4 w-4" />
+                      Embed Code
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="testing"
+                      className="flex items-center gap-1"
+                    >
+                      <Monitor className="h-4 w-4" />
+                      Advanced Testing
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Preview Tab */}
+                  <TabsContent value="preview" className="m-0">
+                    <div className="p-0">
+                      <WidgetPreview config={widget} />
+                    </div>
+                  </TabsContent>
+
+                  {/* Embed Code Tab */}
+                  <TabsContent value="embed" className="m-0">
+                    <div className="p-4 space-y-6">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="space-y-1">
+                          <h3 className="text-lg font-medium">
+                            Embed Code Generator
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Choose the embed type and environment to generate
+                            the code
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={environment}
+                            onValueChange={handleEnvironmentChange}
+                          >
+                            <SelectTrigger className="w-[140px]">
+                              <SelectValue placeholder="Environment" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="development">
+                                Development
+                              </SelectItem>
+                              <SelectItem value="staging">Staging</SelectItem>
+                              <SelectItem value="production">
+                                Production
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Badge className={getEnvironmentBadgeColor()}>
+                            {environment.charAt(0).toUpperCase() +
+                              environment.slice(1)}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <TooltipProvider>
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                        <Button
+                          variant={
+                            embedType === "script" ? "default" : "outline"
+                          }
+                          onClick={() => setEmbedType("script")}
+                          className="justify-start"
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center">
+                          <Code className="h-4 w-4 mr-2" />
+                          JavaScript
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Standard JavaScript embed code with full configuration</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Button>
+                        <Button
+                          variant={
+                            embedType === "iframe" ? "default" : "outline"
+                          }
+                          onClick={() => setEmbedType("iframe")}
+                          className="justify-start"
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center">
+                          <Monitor className="h-4 w-4 mr-2" />
+                          iFrame
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Embed as an iframe for isolated environments</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Button>
+                        <Button
+                          variant={
+                            embedType === "webcomponent" ? "default" : "outline"
+                          }
+                          onClick={() => setEmbedType("webcomponent")}
+                          className="justify-start"
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center">
+                          <Layers className="h-4 w-4 mr-2" />
+                          Web Component
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Modern web component implementation</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Button>
+                        <Button
+                          variant={
+                            embedType === "oneline" ? "default" : "outline"
+                          }
+                          onClick={() => setEmbedType("oneline")}
+                          className="justify-start"
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center">
+                          <Smartphone className="h-4 w-4 mr-2" />
+                          One-Line
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Simplified one-line embed for non-technical users</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Button>
+                        <Button
+                          variant={embedType === "npm" ? "default" : "outline"}
+                          onClick={() => setEmbedType("npm")}
+                          className="justify-start"
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="flex items-center">
+                          <Package className="h-4 w-4 mr-2" />
+                          NPM/Yarn
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>NPM/Yarn package installation and usage</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Button>
+                      </div>
+
+                      <div className="relative">
+                        <div className="bg-slate-800 text-white p-2 rounded-t-md flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Info className="h-4 w-4 mr-2 text-blue-400" />
+                            <span className="text-sm">
+                              {embedType === "script" && "JavaScript Embed Code"}
+                              {embedType === "iframe" && "iFrame Embed Code"}
+                              {embedType === "webcomponent" && "Web Component Embed Code"}
+                              {embedType === "oneline" && "One-Line Embed Code"}
+                              {embedType === "npm" && "NPM/Yarn Installation"}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            Environment: {environment.charAt(0).toUpperCase() + environment.slice(1)}
+                          </div>
+                        </div>
+                        <pre className="bg-slate-900 text-white p-4 rounded-b-md overflow-x-auto text-sm font-mono whitespace-pre-wrap max-h-[400px] overflow-y-auto border-t border-slate-700">
+                          <code>{getEmbedCode()}</code>
+                        </pre>
+                        <div className="absolute top-2 right-2 flex gap-2">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="bg-primary hover:bg-primary/90"
+                            onClick={handleCopyCode}
+                          >
+                            {copied ? (
+                              <>
+                                <Check className="h-4 w-4 mr-1" />
+                                Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-4 w-4 mr-1" />
+                                Copy
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                        <Button
+                          variant="outline"
+                          onClick={handleRefresh}
+                          className="flex items-center gap-1"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Refresh
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="flex items-center gap-1"
+                          onClick={() => {
+                            const testPageUrl = `${window.location.origin}/widget-test-page.html?widgetId=${widget.id}&env=${environment}`;
+                            window.open(testPageUrl, "_blank");
+                          }}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Open Test Page
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Testing Tab */}
+                  <TabsContent value="testing" className="m-0">
+                    <div className="p-0">
+                      <WidgetTestingContainer
+                        widgetId={String(widget.id)}
+                        config={widget}
+                        initialTab="preview"
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardHeader>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Widget Info Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Widget Information</CardTitle>
+                <CardDescription>
+                  Details about the selected widget
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Name</h4>
+                  <p className="text-sm">{widget.name}</p>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Description</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {widget.description || "No description provided"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Status</h4>
+                    <Badge variant={widget.is_active ? "default" : "secondary"}>
+                      {widget.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Published</h4>
+                    <Badge
+                      variant={widget.is_published ? "default" : "outline"}
+                    >
+                      {widget.is_published ? "Published" : "Draft"}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Created</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(widget.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Last Updated</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(widget.updated_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => navigate(`/widgets/edit/${selectedWidgetId}`)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit Widget Configuration
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    const testPageUrl = `${window.location.origin}/widget-test-page.html?widgetId=${widget.id}&env=${environment}`;
+                    window.open(testPageUrl, "_blank");
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open in Test Page
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleRefresh}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh Preview
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Device Preview Shortcuts */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Device Preview</CardTitle>
+                <CardDescription>Test on different devices</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex flex-col items-center justify-center py-4"
+                    onClick={() => {
+                      setActiveTab("preview");
+                      // Additional logic to set desktop view
+                    }}
+                  >
+                    <Monitor className="h-6 w-6 mb-1" />
+                    <span className="text-xs">Desktop</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex flex-col items-center justify-center py-4"
+                    onClick={() => {
+                      setActiveTab("preview");
+                      // Additional logic to set tablet view
+                    }}
+                  >
+                    <Tablet className="h-6 w-6 mb-1" />
+                    <span className="text-xs">Tablet</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex flex-col items-center justify-center py-4"
+                    onClick={() => {
+                      setActiveTab("preview");
+                      // Additional logic to set mobile view
+                    }}
+                  >
+                    <Smartphone className="h-6 w-6 mb-1" />
+                    <span className="text-xs">Mobile</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       ) : (
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">
-              No widget selected. Please select a widget to test.
+              No widget selected. Please select a widget to preview and generate
+              embed code.
             </p>
           </CardContent>
         </Card>
