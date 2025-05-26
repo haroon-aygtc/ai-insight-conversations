@@ -1,3 +1,4 @@
+
 import apiService from './api';
 
 export interface User {
@@ -206,7 +207,10 @@ class AuthService {
   async getActivityLogs(page: number = 1, perPage: number = 20): Promise<ActivityLogsResponse> {
     try {
       const response = await apiService.get(`/api/auth/activity-logs?page=${page}&per_page=${perPage}`);
-      return response.data;
+      return {
+        logs: response.data?.logs || [],
+        total: response.data?.total || 0
+      };
     } catch (error) {
       console.error('Error fetching activity logs:', error);
       // Return mock data for now
@@ -242,7 +246,7 @@ class AuthService {
   async getActiveSessions(): Promise<SessionInfo[]> {
     try {
       const response = await apiService.get('/api/auth/sessions');
-      return response.data;
+      return response.data?.sessions || [];
     } catch (error) {
       console.error('Error fetching active sessions:', error);
       // Return mock data for now

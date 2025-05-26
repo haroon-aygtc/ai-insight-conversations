@@ -1,30 +1,36 @@
 
-import React from "react";
-import { EnhancedCard, EnhancedCardHeader, EnhancedCardTitle, EnhancedCardDescription, EnhancedCardContent } from "@/components/ui/enhanced-card";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Widgets = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Widgets</h1>
-        <p className="text-muted-foreground">
-          Manage and configure your chat widgets
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Widgets</h1>
+          <p className="text-muted-foreground">Manage your chat widgets</p>
+        </div>
+        <Button onClick={() => navigate('/widgets/new')}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Widget
+        </Button>
       </div>
 
-      <EnhancedCard>
-        <EnhancedCardHeader>
-          <EnhancedCardTitle>Widget Management</EnhancedCardTitle>
-          <EnhancedCardDescription>
-            Create, edit, and deploy chat widgets across your applications
-          </EnhancedCardDescription>
-        </EnhancedCardHeader>
-        <EnhancedCardContent>
-          <p className="text-sm text-muted-foreground">
-            Widget management interface coming soon...
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Widgets</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-center py-8">
+            No widgets found. Create your first widget to get started.
           </p>
-        </EnhancedCardContent>
-      </EnhancedCard>
+        </CardContent>
+      </Card>
     </div>
   );
 };
