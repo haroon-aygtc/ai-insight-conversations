@@ -1,22 +1,31 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, LoginCredentials, RegisterData, authService } from '@/services/auth';
-import { useToast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  register: (email: string, password: string, name: string) => Promise<void>;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => Promise<void>;
-  hasRole: (role: string) => boolean;
-  hasPermission: (permission: string) => boolean;
-  hasAnyRole: (roles: string[]) => boolean;
-  hasAnyPermission: (permissions: string[]) => boolean;
+  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -25,125 +34,85 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    initializeAuth();
+    // Check for existing session
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          // Mock user for development
+          setUser({
+            id: '1',
+            email: 'user@example.com',
+            name: 'John Doe',
+            avatar: '/api/placeholder/32/32'
+          });
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
-  // With pure Laravel Sanctum, we don't need to track session time manually
-  // Session management is handled by the server
-
-  const handleSessionExpired = () => {
-    toast({
-      title: "Session Expired",
-      description: "Your session has expired. Please log in again.",
-      variant: "destructive",
-    });
-    logout();
-    navigate('/login');
-  };
-
-  const initializeAuth = async () => {
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
+      // Mock login for development
+      const mockUser = {
+        id: '1',
+        email,
+        name: 'John Doe',
+        avatar: '/api/placeholder/32/32'
+      };
+      
+      localStorage.setItem('auth_token', 'mock_token');
+      setUser(mockUser);
     } catch (error) {
-      console.error('Error initializing auth:', error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = async (credentials: LoginCredentials) => {
-    try {
-      setIsLoading(true);
-      const user = await authService.login(credentials);
-      setUser(user);
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${user.first_name}!`,
-      });
-      navigate('/');
-    } catch (error) {
-      console.error('Login error:', error);
-      toast({
-        title: "Login Failed",
-        description: error.message || "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Login failed:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (data: RegisterData) => {
+  const register = async (email: string, password: string, name: string) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const user = await authService.register(data);
-      setUser(user);
-      toast({
-        title: "Registration Successful",
-        description: `Welcome, ${user.first_name}!`,
-      });
-      navigate('/');
+      // Mock registration for development
+      const mockUser = {
+        id: '1',
+        email,
+        name,
+        avatar: '/api/placeholder/32/32'
+      };
+      
+      localStorage.setItem('auth_token', 'mock_token');
+      setUser(mockUser);
     } catch (error) {
-      console.error('Registration error:', error);
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Could not create account. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Registration failed:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async () => {
-    try {
-      setIsLoading(true);
-      await authService.logout();
-      setUser(null);
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const hasRole = (role: string): boolean => {
-    return user?.roles.includes(role) || false;
-  };
-
-  const hasPermission = (permission: string): boolean => {
-    return user?.permissions.includes(permission) || false;
-  };
-
-  const hasAnyRole = (roles: string[]): boolean => {
-    return roles.some(role => user?.roles.includes(role)) || false;
-  };
-
-  const hasAnyPermission = (permissions: string[]): boolean => {
-    return permissions.some(permission => user?.permissions.includes(permission)) || false;
+  const logout = () => {
+    localStorage.removeItem('auth_token');
+    setUser(null);
   };
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
-    isLoading,
     login,
-    register,
     logout,
-    hasRole,
-    hasPermission,
-    hasAnyRole,
-    hasAnyPermission,
+    register,
+    isLoading,
+    isAuthenticated: !!user,
   };
 
   return (
@@ -152,13 +121,3 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export default AuthContext;

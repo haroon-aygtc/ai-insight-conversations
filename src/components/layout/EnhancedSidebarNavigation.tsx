@@ -35,7 +35,15 @@ export const EnhancedSidebarNavigation = () => {
   const { state } = useSidebar();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["main"]);
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === "/widgets" && (location.pathname.startsWith("/widgets") || location.pathname === "/widget-configurator")) {
+      return true;
+    }
+    if (path === "/widget-testing" && location.pathname.startsWith("/widget-testing")) {
+      return true;
+    }
+    return location.pathname === path;
+  };
   
   const toggleGroup = (groupName: string) => {
     setExpandedGroups(prev => 
