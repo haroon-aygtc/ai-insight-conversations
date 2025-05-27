@@ -1,13 +1,23 @@
+
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Send, User, Bot } from 'lucide-react';
+
+interface Message {
+  role: string;
+  content: string;
+}
 
 interface ChatInterfaceProps {
-  messages: Array<{role: string, content: string}>;
+  messages: Message[];
   onSendMessage: (message: string) => void;
   onEndChat: () => void;
   primaryColor: string;
   botName: string;
   inputPlaceholder: string;
   showTypingIndicator?: boolean;
+  avatarUrl?: string;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -18,194 +28,129 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   botName,
   inputPlaceholder,
   showTypingIndicator = true,
+  avatarUrl = '',
 }) => {
-  const [input, setInput] = useState('');
+  const [inputValue, setInputValue] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
-
-  const handleSendMessageClick = () => {
-    if (input.trim()) {
-      onSendMessage(input);
-      setInput('');
-    }
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSendMessageClick();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputValue.trim()) {
+      onSendMessage(inputValue);
+      setInputValue('');
     }
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <style>
-        {`
-          .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-          }
-          
-          .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            max-height: 300px;
-          }
-          
-          .message {
-            margin-bottom: 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-          }
-          
-          .message.user {
-            flex-direction: row-reverse;
-          }
-          
-          .message-content {
-            max-width: 80%;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.4;
-          }
-          
-          .message.user .message-content {
-            background-color: ${primaryColor};
-            color: white;
-            border-bottom-right-radius: 4px;
-          }
-          
-          .message.assistant .message-content {
-            background-color: #f3f4f6;
-            color: #1f2937;
-            border-bottom-left-radius: 4px;
-          }
-          
-          .input-container {
-            padding: 16px;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-          }
-          
-          .message-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 20px;
-            outline: none;
-            font-size: 14px;
-          }
-          
-          .send-button {
-            background-color: ${primaryColor};
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: opacity 0.2s;
-          }
-          
-          .send-button:hover {
-            opacity: 0.8;
-          }
-          
-          .send-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-          
-          .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 12px;
-            background-color: #f3f4f6;
-            border-radius: 12px;
-            border-bottom-left-radius: 4px;
-            max-width: 80%;
-            margin-bottom: 12px;
-          }
-          
-          .typing-dot {
-            width: 6px;
-            height: 6px;
-            background-color: #9ca3af;
-            border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out;
-          }
-          
-          .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-          }
-          
-          .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-          }
-          
-          @keyframes typing {
-            0%, 80%, 100% {
-              transform: scale(0.8);
-              opacity: 0.5;
-            }
-            40% {
-              transform: scale(1);
-              opacity: 1;
-            }
-          }
-        `}
-      </style>
-      
-      <div className="chat-container">
-        <div className="messages-container">
-          {messages.map((message, index) => (
-            <div key={index} className={`message ${message.role}`}>
-              <div className="message-content">
-                {message.content}
+    <div className="flex flex-col h-full">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            {message.role === 'assistant' && (
+              <div className="flex-shrink-0">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={botName}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <Bot size={16} />
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div
+              className={`max-w-[70%] p-3 rounded-lg ${
+                message.role === 'user'
+                  ? 'text-white ml-auto'
+                  : 'bg-gray-100 text-gray-900'
+              }`}
+              style={{
+                backgroundColor: message.role === 'user' ? primaryColor : undefined,
+              }}
+            >
+              <p className="text-sm">{message.content}</p>
+            </div>
+            
+            {message.role === 'user' && (
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                  <User size={16} className="text-gray-600" />
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        
+        {showTypingIndicator && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
+          <div className="flex gap-3 justify-start">
+            <div className="flex-shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={botName}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <Bot size={16} />
+                </div>
+              )}
+            </div>
+            <div className="bg-gray-100 p-3 rounded-lg">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
-          ))}
-          {showTypingIndicator && (
-            <div className="typing-indicator">
-              <div className="typing-dot"></div>
-              <div className="typing-dot"></div>
-              <div className="typing-dot"></div>
-            </div>
-          )}
-        </div>
-        
-        <div className="input-container">
-          <input
-            type="text"
-            className="message-input"
+          </div>
+        )}
+      </div>
+
+      {/* Input Area */}
+      <div className="border-t p-4">
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             placeholder={inputPlaceholder}
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleInputKeyDown}
+            className="flex-1"
           />
-          <button
-            className="send-button"
-            onClick={handleSendMessageClick}
-            disabled={!input.trim()}
-            aria-label="Send message"
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!inputValue.trim()}
+            style={{ backgroundColor: primaryColor }}
+            className="text-white hover:opacity-90"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 13V18H6L16 8L14 6L4 16V13Z" fill="white"/>
-              <path d="M18 6L16 8L18 6ZM14 6L20 6L14 6Z" fill="white"/>
-            </svg>
-          </button>
-          <button onClick={onEndChat}>End Chat</button>
+            <Send size={16} />
+          </Button>
+        </form>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-xs text-gray-500">
+            Powered by {botName}
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onEndChat}
+            className="text-xs text-gray-500 hover:text-gray-700"
+          >
+            End Chat
+          </Button>
         </div>
       </div>
     </div>

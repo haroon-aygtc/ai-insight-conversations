@@ -18,7 +18,6 @@ import ChatInterface from "../widget-preview/ChatInterface";
 import PostChatForm from "../widget-preview/PostChatForm";
 import FeedbackForm from "../widget-preview/FeedbackForm";
 
-
 interface ModernWidgetPreviewProps {
   config: any;
   deviceType?: 'desktop' | 'tablet' | 'mobile';
@@ -155,6 +154,7 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
       fontFamily = 'Inter, sans-serif',
       textColor = '#1f2937',
       headerTextColor = '#ffffff',
+      avatarUrl = '',
     } = config.appearance || {};
     
     if (currentView === 'pre-chat' && config.content.enablePreChatForm) {
@@ -177,6 +177,7 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
           botName={config.content.botName || 'AI Assistant'}
           inputPlaceholder={config.content.inputPlaceholder || 'Type a message...'}
           showTypingIndicator={config.content.showTypingIndicator}
+          avatarUrl={avatarUrl}
         />
       );
     } else if (currentView === 'post-chat') {
@@ -550,16 +551,30 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
       >
         {!isOpen ? (
           <div
-            className="rounded-full flex items-center justify-center p-3 text-white"
+            className="rounded-full flex items-center justify-center p-3 text-white overflow-hidden"
             style={{
               backgroundColor: primaryColor,
               width: currentSizing.iconSize,
               height: currentSizing.iconSize,
               borderRadius:
-                config.appearance.theme === "modern" ? "12px" : "50%",
+                config.appearance.iconStyle === "square" ? "8px" : 
+                config.appearance.iconStyle === "rounded" ? "12px" : "50%",
             }}
           >
-            <MessageSquare size={parseInt(currentSizing.iconSize) * 0.5} />
+            {config.appearance.avatarUrl ? (
+              <img
+                src={config.appearance.avatarUrl}
+                alt="Chat Avatar"
+                className="w-full h-full object-cover"
+                style={{
+                  borderRadius:
+                    config.appearance.iconStyle === "square" ? "6px" : 
+                    config.appearance.iconStyle === "rounded" ? "10px" : "50%",
+                }}
+              />
+            ) : (
+              <MessageSquare size={parseInt(currentSizing.iconSize) * 0.5} />
+            )}
           </div>
         ) : (
           <div
@@ -591,7 +606,13 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
               style={getHeaderStyleProps()}
             >
               <div className="flex items-center gap-2">
-                {config.appearance.theme === "modern" && (
+                {config.appearance.avatarUrl ? (
+                  <img
+                    src={config.appearance.avatarUrl}
+                    alt="Bot Avatar"
+                    className="w-8 h-8 rounded-full object-cover border-2 border-white border-opacity-20"
+                  />
+                ) : config.appearance.theme === "modern" && (
                   <div className="bg-white bg-opacity-20 p-1.5 rounded">
                     <MessageSquare size={16} className="text-white" />
                   </div>
