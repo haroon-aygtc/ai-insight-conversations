@@ -69,7 +69,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(formData);
+      await login(formData.email, formData.password);
       toast({
         title: "Login successful",
         description: "Welcome back!",

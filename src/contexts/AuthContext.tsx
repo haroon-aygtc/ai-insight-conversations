@@ -6,6 +6,8 @@ interface User {
   email: string;
   name: string;
   avatar?: string;
+  roles: string[];
+  permissions: string[];
 }
 
 interface AuthContextType {
@@ -15,6 +17,8 @@ interface AuthContextType {
   register: (email: string, password: string, name: string) => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
+  hasAnyRole: (roles: string[]) => boolean;
+  hasAnyPermission: (permissions: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -46,7 +50,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             id: '1',
             email: 'user@example.com',
             name: 'John Doe',
-            avatar: '/api/placeholder/32/32'
+            avatar: '/api/placeholder/32/32',
+            roles: ['user'],
+            permissions: ['read', 'write']
           });
         }
       } catch (error) {
@@ -67,7 +73,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         id: '1',
         email,
         name: 'John Doe',
-        avatar: '/api/placeholder/32/32'
+        avatar: '/api/placeholder/32/32',
+        roles: ['user'],
+        permissions: ['read', 'write']
       };
       
       localStorage.setItem('auth_token', 'mock_token');
@@ -88,7 +96,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         id: '1',
         email,
         name,
-        avatar: '/api/placeholder/32/32'
+        avatar: '/api/placeholder/32/32',
+        roles: ['user'],
+        permissions: ['read', 'write']
       };
       
       localStorage.setItem('auth_token', 'mock_token');
@@ -106,6 +116,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const hasAnyRole = (roles: string[]): boolean => {
+    if (!user || !user.roles) return false;
+    return roles.some(role => user.roles.includes(role));
+  };
+
+  const hasAnyPermission = (permissions: string[]): boolean => {
+    if (!user || !user.permissions) return false;
+    return permissions.some(permission => user.permissions.includes(permission));
+  };
+
   const value: AuthContextType = {
     user,
     login,
@@ -113,6 +133,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     isLoading,
     isAuthenticated: !!user,
+    hasAnyRole,
+    hasAnyPermission,
   };
 
   return (

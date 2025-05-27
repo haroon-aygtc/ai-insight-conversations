@@ -100,8 +100,8 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const { agreeToTerms, ...registrationData } = formData;
-      await register(registrationData);
+      const fullName = `${formData.first_name} ${formData.last_name}`;
+      await register(formData.email, formData.password, fullName);
       toast({
         title: "Registration successful",
         description: "Welcome to AI Insights!",
