@@ -1,4 +1,3 @@
-
 import apiService from './api';
 
 export interface User {
@@ -34,22 +33,18 @@ export interface AuthResponse {
 
 export interface ActivityLog {
   id: string;
-  user_id: string;
   action: string;
-  description: string;
-  ip_address: string;
-  user_agent: string;
-  created_at: string;
+  timestamp: string;
+  details: string;
+  ip_address?: string;
 }
 
 export interface SessionInfo {
   id: string;
-  user_id: string;
-  ip_address: string;
-  user_agent: string;
-  last_activity: string;
+  device: string;
+  location: string;
+  last_active: string;
   is_current: boolean;
-  location?: string;
 }
 
 export interface ActivityLogsResponse {
@@ -162,73 +157,34 @@ class AuthService {
     sessionStorage.removeItem('user');
   }
 
-  async getActivityLogs(page: number = 1, perPage: number = 20): Promise<ActivityLogsResponse> {
+  async getActivityLogs(): Promise<{ logs: ActivityLog[]; total: number }> {
     try {
-      const response = await apiService.get(`/api/auth/activity-logs?page=${page}&per_page=${perPage}`);
+      const response = await apiService.get('/api/user/activity-logs');
+      const data = response.data as any;
       return {
-        logs: response.data?.logs || [],
-        total: response.data?.total || 0
+        logs: data.logs || [],
+        total: data.total || 0
       };
     } catch (error) {
       console.error('Error fetching activity logs:', error);
-      return {
-        logs: [
-          {
-            id: '1',
-            user_id: '1',
-            action: 'login',
-            description: 'User logged in successfully',
-            ip_address: '192.168.1.1',
-            user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: '2',
-            user_id: '1',
-            action: 'widget_created',
-            description: 'Created new chat widget',
-            ip_address: '192.168.1.1',
-            user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-          }
-        ],
-        total: 2
-      };
+      return { logs: [], total: 0 };
     }
   }
 
   async getActiveSessions(): Promise<SessionInfo[]> {
     try {
-      const response = await apiService.get('/api/auth/sessions');
-      return response.data?.sessions || [];
+      const response = await apiService.get('/api/user/sessions');
+      const data = response.data as any;
+      return data.sessions || [];
     } catch (error) {
-      console.error('Error fetching active sessions:', error);
-      return [
-        {
-          id: '1',
-          user_id: '1',
-          ip_address: '192.168.1.1',
-          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          last_activity: new Date().toISOString(),
-          is_current: true,
-          location: 'New York, US'
-        },
-        {
-          id: '2',
-          user_id: '1',
-          ip_address: '192.168.1.2',
-          user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15',
-          last_activity: new Date(Date.now() - 7200000).toISOString(),
-          is_current: false,
-          location: 'San Francisco, US'
-        }
-      ];
+      console.error('Error fetching sessions:', error);
+      return [];
     }
   }
 
   async terminateSession(sessionId: string): Promise<void> {
     try {
-      await apiService.delete(`/api/auth/sessions/${sessionId}`);
+      await apiService.delete(`/api/user/sessions/${sessionId}`);
     } catch (error) {
       console.error('Error terminating session:', error);
       throw error;
@@ -237,9 +193,7 @@ class AuthService {
 
   async logoutAllDevices(): Promise<void> {
     try {
-      await apiService.post('/api/auth/logout-all');
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      await apiService.post('/api/user/logout-all');
     } catch (error) {
       console.error('Error logging out all devices:', error);
       throw error;

@@ -1,17 +1,14 @@
-
 import apiService from './api';
 
-// Provider interfaces
 export interface AIProvider {
   id: string;
   name: string;
   type: string;
   api_key: string;
-  api_url?: string;
+  base_url?: string;
   is_active: boolean;
-  config: Record<string, any>;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AIModel {
@@ -19,171 +16,146 @@ export interface AIModel {
   provider_id: string;
   name: string;
   model_id: string;
-  description?: string;
+  max_tokens: number;
   is_active: boolean;
-  config: Record<string, any>;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface ProvidersResponse {
+export interface AIProviderListResponse {
   providers: AIProvider[];
   total: number;
+  page: number;
+  perPage: number;
 }
 
-export interface ModelsResponse {
+export interface AIModelListResponse {
   models: AIModel[];
   total: number;
 }
 
-export interface ProviderResponse {
-  provider: AIProvider;
-}
-
-export interface ModelResponse {
-  model: AIModel;
-}
-
-// Get all providers
-export const getProviders = async (): Promise<ProvidersResponse> => {
+export const getProviders = async (page: number = 1, perPage: number = 10): Promise<AIProviderListResponse> => {
   try {
-    const response = await apiService.get('/api/ai-providers');
+    const response = await apiService.get(`/api/ai/providers?page=${page}&per_page=${perPage}`);
+    const data = response.data as any;
     return {
-      providers: response.data?.providers || [],
-      total: response.data?.total || 0
+      providers: data.providers || [],
+      total: data.total || 0,
+      page,
+      perPage
     };
   } catch (error) {
-    console.error('Error fetching providers:', error);
-    // Return mock data as fallback
-    return {
-      providers: [
-        {
-          id: '1',
-          name: 'OpenAI',
-          type: 'openai',
-          api_key: 'sk-***',
-          is_active: true,
-          config: {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ],
-      total: 1
-    };
-  }
-};
-
-// Get single provider
-export const getProvider = async (id: string): Promise<ProviderResponse> => {
-  try {
-    const response = await apiService.get(`/api/ai-providers/${id}`);
-    return {
-      provider: response.data?.provider || null
-    };
-  } catch (error) {
-    console.error('Error fetching provider:', error);
+    console.error('Error fetching AI providers:', error);
     throw error;
   }
 };
 
-// Create provider
-export const createProvider = async (providerData: Partial<AIProvider>): Promise<ProviderResponse> => {
+export const getProvider = async (id: string): Promise<AIProvider> => {
   try {
-    const response = await apiService.post('/api/ai-providers', providerData);
-    return {
-      provider: response.data?.provider || null
-    };
+    const response = await apiService.get(`/api/ai/providers/${id}`);
+    const data = response.data as any;
+    return data.provider as AIProvider;
   } catch (error) {
-    console.error('Error creating provider:', error);
+    console.error('Error fetching AI provider:', error);
     throw error;
   }
 };
 
-// Update provider
-export const updateProvider = async (id: string, providerData: Partial<AIProvider>): Promise<ProviderResponse> => {
+export const createProvider = async (providerData: Omit<AIProvider, 'id' | 'created_at' | 'updated_at'>): Promise<AIProvider> => {
   try {
-    const response = await apiService.put(`/api/ai-providers/${id}`, providerData);
-    return {
-      provider: response.data?.provider || null
-    };
+    const response = await apiService.post('/api/ai/providers', providerData);
+    const data = response.data as any;
+    return data.provider as AIProvider;
   } catch (error) {
-    console.error('Error updating provider:', error);
+    console.error('Error creating AI provider:', error);
     throw error;
   }
 };
 
-// Delete provider
-export const deleteProvider = async (id: string): Promise<{ success: boolean; message: string }> => {
+export const updateProvider = async (id: string, providerData: Partial<AIProvider>): Promise<AIProvider> => {
   try {
-    await apiService.delete(`/api/ai-providers/${id}`);
-    return {
-      success: true,
-      message: 'Provider deleted successfully'
-    };
+    const response = await apiService.put(`/api/ai/providers/${id}`, providerData);
+    const data = response.data as any;
+    return data.provider as AIProvider;
   } catch (error) {
-    console.error('Error deleting provider:', error);
-    return {
-      success: false,
-      message: 'Failed to delete provider'
-    };
+    console.error('Error updating AI provider:', error);
+    throw error;
   }
 };
 
-// Test provider connection
-export const testProvider = async (id: string): Promise<{ success: boolean; message: string }> => {
+export const deleteProvider = async (id: string): Promise<void> => {
   try {
-    const response = await apiService.post(`/api/ai-providers/${id}/test`);
-    return {
-      success: true,
-      message: 'Provider connection successful'
-    };
+    await apiService.delete(`/api/ai/providers/${id}`);
   } catch (error) {
-    console.error('Error testing provider:', error);
-    return {
-      success: false,
-      message: 'Provider connection failed'
-    };
+    console.error('Error deleting AI provider:', error);
+    throw error;
   }
 };
 
-// Get all models
-export const getModels = async (providerId?: string): Promise<ModelsResponse> => {
+export const toggleProviderStatus = async (id: string, status: boolean): Promise<AIProvider> => {
   try {
-    const url = providerId ? `/api/ai-models?provider_id=${providerId}` : '/api/ai-models';
+    const response = await apiService.post(`/api/ai/providers/${id}/status`, { is_active: status });
+    const data = response.data as any;
+    return data.provider as AIProvider;
+  } catch (error) {
+    console.error('Error toggling AI provider status:', error);
+    throw error;
+  }
+};
+
+export const getModels = async (providerId?: string): Promise<AIModelListResponse> => {
+  try {
+    const url = providerId ? `/api/ai/models?provider_id=${providerId}` : '/api/ai/models';
     const response = await apiService.get(url);
+    const data = response.data as any;
     return {
-      models: response.data?.models || [],
-      total: response.data?.total || 0
+      models: data.models || [],
+      total: data.total || 0
     };
   } catch (error) {
-    console.error('Error fetching models:', error);
-    return {
-      models: [],
-      total: 0
-    };
-  }
-};
-
-// Get single model
-export const getModel = async (id: string): Promise<ModelResponse> => {
-  try {
-    const response = await apiService.get(`/api/ai-models/${id}`);
-    return {
-      model: response.data?.model || null
-    };
-  } catch (error) {
-    console.error('Error fetching model:', error);
+    console.error('Error fetching AI models:', error);
     throw error;
   }
 };
 
-export default {
-  getProviders,
-  getProvider,
-  createProvider,
-  updateProvider,
-  deleteProvider,
-  testProvider,
-  getModels,
-  getModel
+export const createModel = async (modelData: Omit<AIModel, 'id' | 'created_at' | 'updated_at'>): Promise<AIModel> => {
+  try {
+    const response = await apiService.post('/api/ai/models', modelData);
+    const data = response.data as any;
+    return data.model as AIModel;
+  } catch (error) {
+    console.error('Error creating AI model:', error);
+    throw error;
+  }
+};
+
+export const updateModel = async (id: string, modelData: Partial<AIModel>): Promise<AIModel> => {
+  try {
+    const response = await apiService.put(`/api/ai/models/${id}`, modelData);
+    const data = response.data as any;
+    return data.model as AIModel;
+  } catch (error) {
+    console.error('Error updating AI model:', error);
+    throw error;
+  }
+};
+
+export const deleteModel = async (id: string): Promise<void> => {
+  try {
+    await apiService.delete(`/api/ai/models/${id}`);
+  } catch (error) {
+    console.error('Error deleting AI model:', error);
+    throw error;
+  }
+};
+
+export const toggleModelStatus = async (id: string, status: boolean): Promise<AIModel> => {
+  try {
+    const response = await apiService.post(`/api/ai/models/${id}/status`, { is_active: status });
+    const data = response.data as any;
+    return data.model as AIModel;
+  } catch (error) {
+    console.error('Error toggling AI model status:', error);
+    throw error;
+  }
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +30,63 @@ import { WidgetContentTab } from "@/components/widget-configurator/WidgetContent
 import { WidgetEmbeddingTab } from "@/components/widget-configurator/WidgetEmbeddingTab";
 import ModernWidgetPreview from "@/components/widget-configurator/ModernWidgetPreview";
 import { WidgetTestingPlatform } from "@/components/widget-configurator/testing/WidgetTestingPlatform";
-import * as widgetService from "@/services/widgetService";
+import widgetService, { WidgetData } from "@/services/widgetService";
+
+interface ConfigState {
+  id: any;
+  widget_id: any;
+  name: string;
+  description: string;
+  is_active: boolean;
+  is_published: boolean;
+  status: string;
+  appearance_config: {
+    primaryColor: string;
+    secondaryColor: string;
+    borderRadius: number;
+    chatIconSize: number;
+    fontFamily: string;
+    fontSize: string;
+    fontWeight: string;
+    textColor: string;
+    headerTextColor: string;
+    theme: string;
+    iconStyle: string;
+    customCSS: string;
+  };
+  behavior_config: {
+    autoOpen: string;
+    delay: number;
+    position: string;
+    animation: string;
+    mobileBehavior: string;
+    showAfterPageViews: number;
+    persistState: boolean;
+    showNotifications: boolean;
+  };
+  content_config: {
+    welcomeMessage: string;
+    botName: string;
+    inputPlaceholder: string;
+    chatButtonText: string;
+    headerTitle: string;
+    enablePreChatForm: boolean;
+    preChatFormFields: { id: string; label: string; type: string; placeholder: string; required: boolean; }[];
+    preChatFormTitle: string;
+    preChatFormSubtitle: string;
+    enableFeedback: boolean;
+    feedbackPosition: string;
+    feedbackOptions: { id: string; type: string; question: string; required: boolean; }[];
+    showTypingIndicator: boolean;
+    showAvatar: boolean;
+  };
+  embedding_config: {
+    allowedDomains: string;
+    widgetId: string;
+    enableAnalytics: boolean;
+    gdprCompliance: boolean;
+  };
+}
 
 const WidgetConfigurator = () => {
   const { toast } = useToast();
@@ -41,7 +98,7 @@ const WidgetConfigurator = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState<ConfigState>({
     id: null,
     widget_id: null,
     name: "New Widget",
@@ -163,12 +220,22 @@ const WidgetConfigurator = () => {
         is_active: widgetData.is_active,
         is_published: widgetData.is_published,
         status: widgetData.status,
-        appearance_config: widgetData.appearance_config,
-        behavior_config: widgetData.behavior_config,
-        content_config: widgetData.content_config,
+        appearance_config: {
+          ...config.appearance_config,
+          ...widgetData.appearance_config
+        },
+        behavior_config: {
+          ...config.behavior_config,
+          ...widgetData.behavior_config
+        },
+        content_config: {
+          ...config.content_config,
+          ...widgetData.content_config
+        },
         embedding_config: {
+          ...config.embedding_config,
           ...widgetData.embedding_config,
-          widgetId: widgetData.widget_id,
+          widgetId: widgetData.widget_id || "",
         },
       });
 
@@ -204,7 +271,7 @@ const WidgetConfigurator = () => {
         description: `Loading default ${formType === 'preChatForm' ? 'pre-chat' : formType === 'postChatForm' ? 'post-chat' : 'feedback'} form template...`,
       });
       
-      const currentConfig: widgetService.WidgetData = {
+      const currentConfig: WidgetData = {
         name: config.name,
         description: config.description,
         appearance_config: config.appearance_config,
@@ -240,11 +307,11 @@ const WidgetConfigurator = () => {
     }
   };
 
-  const handleConfigChange = useCallback((section, key, value) => {
+  const handleConfigChange = useCallback((section: string, key: string, value: any) => {
     setConfig((prev) => ({
       ...prev,
       [`${section}_config`]: {
-        ...prev[`${section}_config`],
+        ...prev[`${section}_config` as keyof ConfigState],
         [key]: value,
       },
     }));

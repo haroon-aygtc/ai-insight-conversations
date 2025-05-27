@@ -1,13 +1,7 @@
-
-import React, { useState, useRef, useEffect } from 'react';
-
-interface Message {
-  role: string;
-  content: string;
-}
+import React, { useState } from 'react';
 
 interface ChatInterfaceProps {
-  messages: Message[];
+  messages: Array<{role: string, content: string}>;
   onSendMessage: (message: string) => void;
   onEndChat: () => void;
   primaryColor: string;
@@ -23,180 +17,198 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   primaryColor,
   botName,
   inputPlaceholder,
-  showTypingIndicator = false,
+  showTypingIndicator = true,
 }) => {
-  const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [input, setInput] = useState('');
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    if (showTypingIndicator && messages.length > 0 && messages[messages.length - 1].role === 'user') {
-      setIsTyping(true);
-      const timer = setTimeout(() => {
-        setIsTyping(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [messages, showTypingIndicator]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (inputValue.trim()) {
-      onSendMessage(inputValue);
-      setInputValue('');
+  const handleSendMessageClick = () => {
+    if (input.trim()) {
+      onSendMessage(input);
+      setInput('');
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessageClick();
     }
   };
 
   return (
-    <>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <style>
         {`
-          @keyframes typingAnimation {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-4px); }
+          .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+          }
+          
+          .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            max-height: 300px;
+          }
+          
+          .message {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+          }
+          
+          .message.user {
+            flex-direction: row-reverse;
+          }
+          
+          .message-content {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+          }
+          
+          .message.user .message-content {
+            background-color: ${primaryColor};
+            color: white;
+            border-bottom-right-radius: 4px;
+          }
+          
+          .message.assistant .message-content {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+          }
+          
+          .input-container {
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+          }
+          
+          .message-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+          }
+          
+          .send-button {
+            background-color: ${primaryColor};
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.2s;
+          }
+          
+          .send-button:hover {
+            opacity: 0.8;
+          }
+          
+          .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+          
+          .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background-color: #f3f4f6;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            max-width: 80%;
+            margin-bottom: 12px;
+          }
+          
+          .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+          }
+          
+          .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+          }
+          
+          .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+          }
+          
+          @keyframes typing {
+            0%, 80%, 100% {
+              transform: scale(0.8);
+              opacity: 0.5;
+            }
+            40% {
+              transform: scale(1);
+              opacity: 1;
+            }
           }
         `}
       </style>
       
-      <div className="chat-interface" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div 
-          className="messages-container" 
-          style={{ 
-            flex: 1, 
-            overflowY: 'auto', 
-            padding: '8px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-          }}
-        >
+      <div className="chat-container">
+        <div className="messages-container">
           {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`message ${message.role}`}
-              style={{
-                alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '80%',
-                padding: '10px 12px',
-                borderRadius: '12px',
-                backgroundColor: message.role === 'user' ? primaryColor : '#f3f4f6',
-                color: message.role === 'user' ? 'white' : '#1f2937',
-                marginBottom: '4px',
-                wordBreak: 'break-word',
-              }}
-            >
-              {message.role === 'assistant' && (
-                <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                  {botName}
-                </div>
-              )}
-              {message.content}
-            </div>
-          ))}
-
-          {isTyping && (
-            <div
-              className="typing-indicator"
-              style={{
-                alignSelf: 'flex-start',
-                padding: '10px 12px',
-                borderRadius: '12px',
-                backgroundColor: '#f3f4f6',
-                color: '#1f2937',
-                marginBottom: '4px',
-              }}
-            >
-              <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-                <div className="dot" style={{
-                  width: '6px',
-                  height: '6px',
-                  backgroundColor: '#6b7280',
-                  borderRadius: '50%',
-                  animation: 'typingAnimation 1.4s infinite ease-in-out',
-                  animationDelay: '0s',
-                }}></div>
-                <div className="dot" style={{
-                  width: '6px',
-                  height: '6px',
-                  backgroundColor: '#6b7280',
-                  borderRadius: '50%',
-                  animation: 'typingAnimation 1.4s infinite ease-in-out',
-                  animationDelay: '0.2s',
-                }}></div>
-                <div className="dot" style={{
-                  width: '6px',
-                  height: '6px',
-                  backgroundColor: '#6b7280',
-                  borderRadius: '50%',
-                  animation: 'typingAnimation 1.4s infinite ease-in-out',
-                  animationDelay: '0.4s',
-                }}></div>
+            <div key={index} className={`message ${message.role}`}>
+              <div className="message-content">
+                {message.content}
               </div>
             </div>
+          ))}
+          {showTypingIndicator && (
+            <div className="typing-indicator">
+              <div className="typing-dot"></div>
+              <div className="typing-dot"></div>
+              <div className="typing-dot"></div>
+            </div>
           )}
-          <div ref={messagesEndRef} />
         </div>
-
-        <div className="chat-controls" style={{ padding: '12px', borderTop: '1px solid #e5e7eb' }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px' }}>
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={inputPlaceholder}
-              style={{
-                flex: 1,
-                padding: '10px 12px',
-                borderRadius: '4px',
-                border: '1px solid #d1d5db',
-                fontSize: '14px',
-              }}
-            />
-            <button
-              type="submit"
-              style={{
-                backgroundColor: primaryColor,
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '10px 12px',
-                fontSize: '14px',
-                cursor: 'pointer',
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </form>
-          
+        
+        <div className="input-container">
+          <input
+            type="text"
+            className="message-input"
+            placeholder={inputPlaceholder}
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleInputKeyDown}
+          />
           <button
-            onClick={onEndChat}
-            style={{
-              backgroundColor: 'transparent',
-              color: '#6b7280',
-              border: 'none',
-              fontSize: '12px',
-              padding: '8px 0 0',
-              cursor: 'pointer',
-              textAlign: 'center',
-              width: '100%',
-            }}
+            className="send-button"
+            onClick={handleSendMessageClick}
+            disabled={!input.trim()}
+            aria-label="Send message"
           >
-            End Chat
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 13V18H6L16 8L14 6L4 16V13Z" fill="white"/>
+              <path d="M18 6L16 8L18 6ZM14 6L20 6L14 6Z" fill="white"/>
+            </svg>
           </button>
+          <button onClick={onEndChat}>End Chat</button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

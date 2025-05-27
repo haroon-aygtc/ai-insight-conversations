@@ -30,7 +30,7 @@ export interface WidgetListResponse {
 export const getWidgets = async (page: number = 1, perPage: number = 10): Promise<WidgetListResponse> => {
   try {
     const response = await apiService.get(`/api/widgets?page=${page}&per_page=${perPage}`);
-    return response.data;
+    return response.data as WidgetListResponse;
   } catch (error) {
     console.error('Error fetching widgets:', error);
     return {
@@ -74,7 +74,7 @@ export const getWidgets = async (page: number = 1, perPage: number = 10): Promis
 export const getWidget = async (id: string): Promise<Widget> => {
   try {
     const response = await apiService.get(`/api/widgets/${id}`);
-    return response.data?.widget || response.data;
+    return (response.data?.widget || response.data) as Widget;
   } catch (error) {
     console.error('Error fetching widget:', error);
     throw error;
@@ -84,7 +84,7 @@ export const getWidget = async (id: string): Promise<Widget> => {
 export const createWidget = async (widgetData: WidgetData): Promise<Widget> => {
   try {
     const response = await apiService.post('/api/widgets', widgetData);
-    return response.data?.widget || response.data;
+    return (response.data?.widget || response.data) as Widget;
   } catch (error) {
     console.error('Error creating widget:', error);
     throw error;
@@ -94,7 +94,7 @@ export const createWidget = async (widgetData: WidgetData): Promise<Widget> => {
 export const updateWidget = async (id: string | number, widgetData: WidgetData): Promise<Widget> => {
   try {
     const response = await apiService.put(`/api/widgets/${id}`, widgetData);
-    return response.data?.widget || response.data;
+    return (response.data?.widget || response.data) as Widget;
   } catch (error) {
     console.error('Error updating widget:', error);
     throw error;
@@ -113,7 +113,7 @@ export const deleteWidget = async (id: string | number): Promise<void> => {
 export const publishWidget = async (id: string | number): Promise<Widget> => {
   try {
     const response = await apiService.post(`/api/widgets/${id}/publish`);
-    return response.data?.widget || response.data;
+    return (response.data?.widget || response.data) as Widget;
   } catch (error) {
     console.error('Error publishing widget:', error);
     throw error;
@@ -123,7 +123,7 @@ export const publishWidget = async (id: string | number): Promise<Widget> => {
 export const unpublishWidget = async (id: string | number): Promise<Widget> => {
   try {
     const response = await apiService.post(`/api/widgets/${id}/unpublish`);
-    return response.data?.widget || response.data;
+    return (response.data?.widget || response.data) as Widget;
   } catch (error) {
     console.error('Error unpublishing widget:', error);
     throw error;
@@ -139,7 +139,7 @@ export const loadDefaultFormTemplate = async (
       config: widgetConfig,
       form_type: formType
     });
-    return response.data?.config || response.data;
+    return (response.data?.config || response.data) as WidgetData;
   } catch (error) {
     console.error('Error loading form template:', error);
     const defaultTemplates = {
@@ -189,7 +189,7 @@ export const loadDefaultFormTemplate = async (
 export const getWidgetEmbedCode = async (widgetId: string): Promise<{ embed_code: string }> => {
   try {
     const response = await apiService.get(`/api/widgets/${widgetId}/embed`);
-    return response.data;
+    return response.data as { embed_code: string };
   } catch (error) {
     console.error('Error fetching embed code:', error);
     return {
@@ -198,7 +198,7 @@ export const getWidgetEmbedCode = async (widgetId: string): Promise<{ embed_code
   }
 };
 
-export default {
+const widgetService = {
   getWidgets,
   getWidget,
   createWidget,
@@ -209,3 +209,5 @@ export default {
   loadDefaultFormTemplate,
   getWidgetEmbedCode
 };
+
+export default widgetService;
