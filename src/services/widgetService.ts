@@ -1,21 +1,18 @@
 
 import apiService from './api';
 
-export interface WidgetData {
+export interface Widget {
+  id: number;
+  widget_id: string;
   name: string;
   description: string;
-  appearance_config: Record<string, any>;
-  behavior_config: Record<string, any>;
-  content_config: Record<string, any>;
-  embedding_config: Record<string, any>;
-}
-
-export interface Widget extends WidgetData {
-  id: string | number;
-  widget_id: string;
   is_active: boolean;
   is_published: boolean;
   status: string;
+  appearance_config: any;
+  behavior_config: any;
+  content_config: any;
+  embedding_config: any;
   created_at?: string;
   updated_at?: string;
 }
@@ -27,81 +24,51 @@ export interface WidgetListResponse {
   perPage: number;
 }
 
-export const getWidgets = async (page: number = 1, perPage: number = 10): Promise<WidgetListResponse> => {
+export const getWidgets = async (page: number = 1, perPage: number = 10): Promise<Widget[]> => {
   try {
     const response = await apiService.get(`/api/widgets?page=${page}&per_page=${perPage}`);
-    return response.data as WidgetListResponse;
+    const data = response.data as any;
+    return data.widgets || data || [];
   } catch (error) {
     console.error('Error fetching widgets:', error);
-    return {
-      widgets: [
-        {
-          id: '1',
-          widget_id: 'widget_123',
-          name: 'Customer Support Widget',
-          description: 'Main customer support chat widget',
-          is_active: true,
-          is_published: true,
-          status: 'published',
-          appearance_config: {
-            primaryColor: '#6366f1',
-            secondaryColor: '#ffffff',
-            borderRadius: 8,
-            theme: 'light'
-          },
-          behavior_config: {
-            autoOpen: 'no',
-            position: 'bottom-right',
-            delay: 5
-          },
-          content_config: {
-            welcomeMessage: 'Hello! How can I help you today?',
-            botName: 'AI Assistant'
-          },
-          embedding_config: {
-            allowedDomains: '*',
-            enableAnalytics: true
-          }
-        }
-      ],
-      total: 1,
-      page: 1,
-      perPage: 10
-    };
+    throw error;
   }
 };
 
 export const getWidget = async (id: string): Promise<Widget> => {
   try {
     const response = await apiService.get(`/api/widgets/${id}`);
-    return (response.data?.widget || response.data) as Widget;
+    const data = response.data as any;
+    return data.widget || data;
   } catch (error) {
     console.error('Error fetching widget:', error);
     throw error;
   }
 };
 
-export const createWidget = async (widgetData: WidgetData): Promise<Widget> => {
+export const createWidget = async (widgetData: Omit<Widget, 'id' | 'created_at' | 'updated_at'>): Promise<Widget> => {
   try {
     const response = await apiService.post('/api/widgets', widgetData);
-    return (response.data?.widget || response.data) as Widget;
+    const data = response.data as any;
+    return data.widget || data;
   } catch (error) {
     console.error('Error creating widget:', error);
     throw error;
   }
 };
 
-export const updateWidget = async (id: string | number, widgetData: WidgetData): Promise<Widget> => {
+export const updateWidget = async (id: string, widgetData: Partial<Widget>): Promise<Widget> => {
   try {
     const response = await apiService.put(`/api/widgets/${id}`, widgetData);
-    return (response.data?.widget || response.data) as Widget;
+    const data = response.data as any;
+    return data.widget || data;
   } catch (error) {
     console.error('Error updating widget:', error);
     throw error;
   }
 };
 
-export const deleteWidget = async (id: string | number): Promise<void> => {
+export const deleteWidget = async (id: string): Promise<void> => {
   try {
     await apiService.delete(`/api/widgets/${id}`);
   } catch (error) {
@@ -110,95 +77,40 @@ export const deleteWidget = async (id: string | number): Promise<void> => {
   }
 };
 
-export const publishWidget = async (id: string | number): Promise<Widget> => {
+export const publishWidget = async (id: string): Promise<Widget> => {
   try {
     const response = await apiService.post(`/api/widgets/${id}/publish`);
-    return (response.data?.widget || response.data) as Widget;
+    const data = response.data as any;
+    return data.widget || data;
   } catch (error) {
     console.error('Error publishing widget:', error);
     throw error;
   }
 };
 
-export const unpublishWidget = async (id: string | number): Promise<Widget> => {
+export const unpublishWidget = async (id: string): Promise<Widget> => {
   try {
     const response = await apiService.post(`/api/widgets/${id}/unpublish`);
-    return (response.data?.widget || response.data) as Widget;
+    const data = response.data as any;
+    return data.widget || data;
   } catch (error) {
     console.error('Error unpublishing widget:', error);
     throw error;
   }
 };
 
-export const loadDefaultFormTemplate = async (
-  widgetConfig: WidgetData,
-  formType: 'preChatForm' | 'postChatForm' | 'feedback'
-): Promise<WidgetData> => {
+export const getWidgetConfig = async (id: string): Promise<any> => {
   try {
-    const response = await apiService.post('/api/widgets/load-template', {
-      config: widgetConfig,
-      form_type: formType
-    });
-    return (response.data?.config || response.data) as WidgetData;
+    const response = await apiService.get(`/api/widgets/${id}/config`);
+    const data = response.data as any;
+    return data.config || data;
   } catch (error) {
-    console.error('Error loading form template:', error);
-    const defaultTemplates = {
-      preChatForm: {
-        ...widgetConfig,
-        content_config: {
-          ...widgetConfig.content_config,
-          preChatFormFields: [
-            {
-              id: "field-name",
-              label: "Name",
-              type: "text",
-              placeholder: "Enter your name",
-              required: true
-            },
-            {
-              id: "field-email",
-              label: "Email",
-              type: "email",
-              placeholder: "Enter your email",
-              required: true
-            }
-          ]
-        }
-      },
-      feedback: {
-        ...widgetConfig,
-        content_config: {
-          ...widgetConfig.content_config,
-          feedbackOptions: [
-            {
-              id: "feedback-helpful",
-              type: "thumbs",
-              question: "Was this helpful?",
-              required: true
-            }
-          ]
-        }
-      },
-      postChatForm: widgetConfig
-    };
-
-    return defaultTemplates[formType] || widgetConfig;
+    console.error('Error fetching widget config:', error);
+    throw error;
   }
 };
 
-export const getWidgetEmbedCode = async (widgetId: string): Promise<{ embed_code: string }> => {
-  try {
-    const response = await apiService.get(`/api/widgets/${widgetId}/embed`);
-    return response.data as { embed_code: string };
-  } catch (error) {
-    console.error('Error fetching embed code:', error);
-    return {
-      embed_code: `<script src="https://example.com/widget.js" id="chat-widget" data-id="${widgetId}"></script>`
-    };
-  }
-};
-
-const widgetService = {
+export const widgetService = {
   getWidgets,
   getWidget,
   createWidget,
@@ -206,8 +118,7 @@ const widgetService = {
   deleteWidget,
   publishWidget,
   unpublishWidget,
-  loadDefaultFormTemplate,
-  getWidgetEmbedCode
+  getWidgetConfig,
 };
 
 export default widgetService;
