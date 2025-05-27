@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -5,13 +6,6 @@ import {
   X,
   Maximize2,
   Minimize2,
-  Send,
-  User,
-  Bot,
-  ChevronRight,
-  AlertCircle,
-  ThumbsUp,
-  ThumbsDown,
 } from "lucide-react";
 import PreChatForm from "../widget-preview/PreChatForm";
 import ChatInterface from "../widget-preview/ChatInterface";
@@ -32,10 +26,9 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
   const [isOpen, setIsOpen] = useState(forceOpen || deviceType === 'mobile' || deviceType === 'tablet');
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentView, setCurrentView] = useState<'pre-chat' | 'chat' | 'post-chat' | 'feedback'>(
-    config.content.enablePreChatForm ? 'pre-chat' : 'chat'
+    config.content?.enablePreChatForm ? 'pre-chat' : 'chat'
   );
   const [messages, setMessages] = useState<Array<{role: string, content: string}>>([]);
-  const [inputValue, setInputValue] = useState("");
   const [preChatData, setPreChatData] = useState<Record<string, any>>({});
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   
@@ -45,11 +38,11 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
       setMessages([
         { 
           role: 'assistant', 
-          content: config.content.welcomeMessage || 'Hello! How can I help you today?' 
+          content: config.content?.welcomeMessage || 'Hello! How can I help you today?' 
         }
       ]);
     }
-  }, [isOpen, currentView, messages.length, config.content.welcomeMessage]);
+  }, [isOpen, currentView, messages.length, config.content?.welcomeMessage]);
 
   // Update widget state when device type changes
   useEffect(() => {
@@ -66,13 +59,13 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
 
   // Reset view when configuration changes
   useEffect(() => {
-    if (config.content.enablePreChatForm) {
+    if (config.content?.enablePreChatForm) {
       setCurrentView('pre-chat');
     } else {
       setCurrentView('chat');
     }
     setPreChatData({});
-  }, [config.content.enablePreChatForm, config.content.preChatFormFields]);
+  }, [config.content?.enablePreChatForm, config.content?.preChatFormFields]);
 
   const toggleWidget = () => {
     setIsOpen(!isOpen);
@@ -117,9 +110,9 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
 
   // Handle end chat
   const handleEndChat = () => {
-    if (config.content.enablePostChatForm) {
+    if (config.content?.enablePostChatForm) {
       setCurrentView('post-chat');
-    } else if (config.content.enableFeedback) {
+    } else if (config.content?.enableFeedback) {
       setCurrentView('feedback');
     } else {
       setIsOpen(false);
@@ -128,7 +121,7 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
 
   // Handle post-chat form submission
   const handlePostChatSubmit = (data: Record<string, any>) => {
-    if (config.content.enableFeedback) {
+    if (config.content?.enableFeedback) {
       setCurrentView('feedback');
     } else {
       setIsOpen(false);
@@ -143,21 +136,48 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
     }, 2000);
   };
 
+  // Extract styles from config with better defaults
+  const {
+    primaryColor = '#6366f1',
+    secondaryColor = '#ffffff',
+    borderRadius = 16,
+    chatIconSize = 56,
+    fontFamily = 'Inter, system-ui, sans-serif',
+    textColor = '#1f2937',
+    headerTextColor = '#ffffff',
+    avatarUrl = '',
+    theme = 'light',
+  } = config.appearance || {};
+
+  const isDarkMode = theme === 'dark';
+
+  // Device-responsive sizing with better proportions
+  const deviceSizing = {
+    desktop: {
+      widgetWidth: "380px",
+      widgetHeight: "550px",
+      iconSize: `${chatIconSize}px`,
+      position: "bottom-6 right-6"
+    },
+    tablet: {
+      widgetWidth: "360px",
+      widgetHeight: "500px",
+      iconSize: `${Math.max(60, chatIconSize * 1.1)}px`,
+      position: "bottom-5 right-5"
+    },
+    mobile: {
+      widgetWidth: "340px",
+      widgetHeight: "480px",
+      iconSize: `${Math.max(60, chatIconSize * 1.1)}px`,
+      position: "bottom-4 right-4"
+    }
+  };
+
+  const currentSizing = deviceSizing[deviceType];
+
   // Render the chat window content based on state
   const renderChatContent = () => {
-    // Extract styles from config
-    const {
-      primaryColor = '#6366f1',
-      secondaryColor = '#ffffff',
-      borderRadius = 8,
-      chatIconSize = 40,
-      fontFamily = 'Inter, sans-serif',
-      textColor = '#1f2937',
-      headerTextColor = '#ffffff',
-      avatarUrl = '',
-    } = config.appearance || {};
-    
-    if (currentView === 'pre-chat' && config.content.enablePreChatForm) {
+    if (currentView === 'pre-chat' && config.content?.enablePreChatForm) {
       return (
         <PreChatForm 
           fields={config.content.preChatFormFields || []} 
@@ -174,18 +194,18 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
           onSendMessage={handleSendMessage}
           onEndChat={handleEndChat}
           primaryColor={primaryColor}
-          botName={config.content.botName || 'AI Assistant'}
-          inputPlaceholder={config.content.inputPlaceholder || 'Type a message...'}
-          showTypingIndicator={config.content.showTypingIndicator}
+          botName={config.content?.botName || 'AI Assistant'}
+          inputPlaceholder={config.content?.inputPlaceholder || 'Type a message...'}
+          showTypingIndicator={config.content?.showTypingIndicator}
           avatarUrl={avatarUrl}
         />
       );
     } else if (currentView === 'post-chat') {
       return (
         <PostChatForm 
-          fields={config.content.postChatFormFields || []}
-          title={config.content.postChatFormTitle || 'Before you go'}
-          subtitle={config.content.postChatFormSubtitle || 'Please provide some feedback about your experience'}
+          fields={config.content?.postChatFormFields || []}
+          title={config.content?.postChatFormTitle || 'Before you go'}
+          subtitle={config.content?.postChatFormSubtitle || 'Please provide some feedback about your experience'}
           primaryColor={primaryColor}
           onSubmit={handlePostChatSubmit}
         />
@@ -193,7 +213,7 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
     } else if (currentView === 'feedback') {
       return (
         <FeedbackForm 
-          options={config.content.feedbackOptions || []}
+          options={config.content?.feedbackOptions || []}
           primaryColor={primaryColor}
           onSubmit={handleFeedbackSubmit}
           submitted={feedbackSubmitted}
@@ -202,474 +222,201 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
     }
     
     return null;
-  }
-
-  // Apply theme colors
-  const primaryColor = config.appearance.primaryColor;
-  const borderRadius = `${config.appearance.borderRadius}px`;
-  const iconSize = `${config.appearance.chatIconSize}px`;
-  const fontFamily = config.appearance.fontFamily || "system-ui";
-
-  // Extract typography settings with defaults
-  const fontSize = config.appearance.fontSize || "medium";
-  const fontWeight = config.appearance.fontWeight || "normal";
-  const textColor = config.appearance.textColor || "#333333";
-  const headerTextColor = config.appearance.headerTextColor || "#ffffff";
-
-  // Extract layout settings with defaults
-  const headerStyle = config.appearance.headerStyle || "solid";
-  const buttonStyle = config.appearance.buttonStyle || "rounded";
-  const gradientEnabled = config.appearance.gradientEnabled || false;
-  const shadowIntensity = config.appearance.shadowIntensity || 2;
-  const backgroundOpacity = config.appearance.backgroundOpacity || 100;
-
-  // Font size mapping
-  const fontSizeMap = {
-    small: {
-      header: "text-xs",
-      message: "text-xs",
-      input: "text-xs",
-    },
-    medium: {
-      header: "text-sm",
-      message: "text-sm",
-      input: "text-sm",
-    },
-    large: {
-      header: "text-base",
-      message: "text-base",
-      input: "text-base",
-    }
-  };
-
-  // Font weight mapping
-  const fontWeightMap = {
-    light: "font-light",
-    normal: "font-normal",
-    medium: "font-medium",
-    semibold: "font-semibold",
-    bold: "font-bold"
-  };
-
-  // Get font classes
-  const getTypographyClasses = (element) => {
-    const size = fontSizeMap[fontSize] || fontSizeMap.medium;
-    const weight = fontWeightMap[fontWeight] || fontWeightMap.normal;
-    return `${size[element]} ${weight}`;
-  };
-
-  // Device-responsive sizing
-  const deviceSizing = {
-    desktop: {
-      widgetWidth: "w-80",
-      widgetHeight: "h-96",
-      iconSize: iconSize,
-      fontSize: "text-sm",
-      padding: "p-4",
-      gap: "gap-4",
-      position: "bottom-4 right-4"
-    },
-    tablet: {
-      widgetWidth: "w-72",
-      widgetHeight: "h-80",
-      iconSize: `${Math.max(48, parseInt(iconSize) * 1.1)}px`,
-      fontSize: "text-sm",
-      padding: "p-3",
-      gap: "gap-3",
-      position: "bottom-4 right-4"
-    },
-    mobile: {
-      widgetWidth: "w-64",
-      widgetHeight: "h-72",
-      iconSize: `${Math.max(48, parseInt(iconSize) * 1.1)}px`,
-      fontSize: "text-sm",
-      padding: "p-3",
-      gap: "gap-3",
-      position: "bottom-3 right-3"
-    }
-  };
-
-  const currentSizing = deviceSizing[deviceType];
-
-  // Adjust widget size for mobile/tablet to fit in device frame
-  const getWidgetConstraints = () => {
-    if (deviceType === 'mobile') {
-      return {
-        maxWidth: '95%',
-        maxHeight: '90%',
-        width: '320px',
-        height: '500px'
-      };
-    }
-    if (deviceType === 'tablet') {
-      return {
-        maxWidth: '90%',
-        maxHeight: '85%',
-        width: '480px',
-        height: '600px'
-      };
-    }
-    return {
-      maxWidth: '320px',
-      maxHeight: '384px',
-      width: '320px',
-      height: '384px'
-    };
-  };
-
-  const widgetConstraints = getWidgetConstraints();
-
-  // Animation classes
-  const animationClasses =
-    {
-      fade: "transition-opacity duration-300",
-      slide: "transition-transform duration-300",
-      bounce: "animate-bounce",
-      none: "",
-    }[config.behavior.animation] || "fade";
-
-  // Apply theme mode
-  const themeMode = config.appearance.theme || 'light';
-  const isDarkMode = themeMode === 'dark' || (themeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-  // Theme-aware colors
-  const backgroundColors = {
-    light: 'bg-slate-50',
-    dark: 'bg-slate-900'
-  };
-
-  const mockContentColors = {
-    light: 'bg-white',
-    dark: 'bg-slate-800'
-  };
-
-  const browserBarColors = {
-    light: 'bg-slate-200',
-    dark: 'bg-slate-700'
-  };
-
-  // Get button style classes
-  const getButtonStyleClasses = (style = buttonStyle) => {
-    switch (style) {
-      case 'pill':
-        return 'rounded-full';
-      case 'square':
-        return 'rounded-sm';
-      case 'minimal':
-        return 'rounded-md border-0 shadow-none';
-      case 'rounded':
-      default:
-        return 'rounded-md';
-    }
-  };
-
-  // Get header style properties
-  const getHeaderStyleProps = () => {
-    let styles: React.CSSProperties = { backgroundColor: primaryColor, fontFamily };
-
-    if (headerStyle === 'gradient') {
-      styles = {
-        ...styles,
-        backgroundImage: `linear-gradient(to right, ${primaryColor}, ${adjustColor(primaryColor, 30)})`,
-      };
-    } else if (headerStyle === 'glass') {
-      styles = {
-        ...styles,
-        backgroundColor: `${primaryColor}CC`, // Add transparency
-        backdropFilter: 'blur(10px)',
-      };
-    } else if (headerStyle === 'flat') {
-      styles = {
-        ...styles,
-        boxShadow: 'none',
-        borderBottom: '1px solid rgba(0,0,0,0.1)',
-      };
-    }
-
-    return styles;
-  };
-
-  // Get shadow class based on intensity
-  const getShadowClass = (intensity = shadowIntensity) => {
-    const shadowMap = {
-      0: 'shadow-none',
-      1: 'shadow-sm',
-      2: 'shadow',
-      3: 'shadow-md',
-      4: 'shadow-lg',
-      5: 'shadow-xl',
-    };
-    return shadowMap[intensity] || 'shadow';
-  };
-
-  // Helper function to adjust a color's brightness
-  const adjustColor = (color, amount) => {
-    // Simple color adjustment for demo purposes
-    return color;
   };
 
   return (
     <div className={cn(
-      "relative w-full h-[500px] rounded-lg border overflow-hidden transition-colors duration-300",
-      isDarkMode ? backgroundColors.dark : backgroundColors.light
+      "relative w-full h-[600px] rounded-xl border overflow-hidden transition-all duration-300",
+      isDarkMode ? "bg-slate-900" : "bg-gradient-to-br from-slate-50 to-slate-100"
     )}>
-      {/* Mock browser frame */}
+      {/* Modern browser frame */}
       <div className={cn(
-        "h-8 flex items-center px-3 gap-1.5 transition-colors duration-300",
-        isDarkMode ? browserBarColors.dark : browserBarColors.light
+        "h-10 flex items-center px-4 gap-2 border-b transition-colors duration-300",
+        isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"
       )}>
-        <div className="w-3 h-3 rounded-full bg-red-400"></div>
-        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-        <div className="w-3 h-3 rounded-full bg-green-400"></div>
+        <div className="flex gap-2">
+          <div className="w-3 h-3 rounded-full bg-red-400"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+          <div className="w-3 h-3 rounded-full bg-green-400"></div>
+        </div>
         <div className={cn(
-          "ml-4 h-5 w-64 rounded-md transition-colors duration-300",
-          isDarkMode ? "bg-slate-600" : "bg-white"
-        )}></div>
+          "ml-4 h-6 w-72 rounded-md flex items-center px-3 text-xs transition-colors duration-300",
+          isDarkMode ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-600"
+        )}>
+          https://example.com
+        </div>
       </div>
 
-      {/* Mock website content */}
+      {/* Mock website content with modern design */}
       <div className={cn(
-        "h-[calc(100%-2rem)] relative overflow-y-auto",
-        deviceType === 'mobile' ? 'p-2' : deviceType === 'tablet' ? 'p-3' : 'p-4'
+        "h-[calc(100%-2.5rem)] relative overflow-y-auto",
+        deviceType === 'mobile' ? 'p-3' : deviceType === 'tablet' ? 'p-4' : 'p-6'
       )}>
-        {/* Header */}
+        {/* Modern header */}
         <div className={cn(
-          "w-full rounded-md shadow-sm mb-3 transition-colors duration-300",
-          isDarkMode ? mockContentColors.dark : mockContentColors.light,
-          deviceType === 'mobile' ? 'h-8' : deviceType === 'tablet' ? 'h-10' : 'h-12'
-        )}></div>
-
-        {/* Content Grid */}
-        <div className={cn(
-          "grid gap-3 mb-3",
-          deviceType === 'mobile' ? 'grid-cols-1' : deviceType === 'tablet' ? 'grid-cols-2' : 'grid-cols-3'
+          "w-full rounded-xl shadow-sm mb-4 p-6 transition-colors duration-300",
+          isDarkMode ? "bg-slate-800" : "bg-white",
+          deviceType === 'mobile' ? 'h-16 p-4' : deviceType === 'tablet' ? 'h-20 p-5' : 'h-24'
         )}>
-          <div className={cn(
-            "rounded-md shadow-sm transition-colors duration-300",
-            isDarkMode ? mockContentColors.dark : mockContentColors.light,
-            deviceType === 'mobile' ? 'h-24' : deviceType === 'tablet' ? 'h-28' : 'h-32'
-          )}></div>
-          {deviceType !== 'mobile' && (
+          <div className="flex items-center justify-between h-full">
             <div className={cn(
-              "rounded-md shadow-sm transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              deviceType === 'tablet' ? 'h-28' : 'h-32'
+              "rounded-lg transition-colors duration-300",
+              isDarkMode ? "bg-slate-700" : "bg-slate-100",
+              deviceType === 'mobile' ? 'w-24 h-6' : deviceType === 'tablet' ? 'w-32 h-8' : 'w-40 h-10'
             )}></div>
-          )}
-          {deviceType === 'desktop' && (
-            <div className={cn(
-              "h-32 rounded-md shadow-sm transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light
-            )}></div>
-          )}
+            <div className="flex gap-2">
+              <div className={cn(
+                "rounded-lg transition-colors duration-300",
+                isDarkMode ? "bg-slate-700" : "bg-slate-100",
+                deviceType === 'mobile' ? 'w-16 h-6' : deviceType === 'tablet' ? 'w-20 h-8' : 'w-24 h-10'
+              )}></div>
+              <div className={cn(
+                "rounded-lg transition-colors duration-300",
+                isDarkMode ? "bg-slate-700" : "bg-slate-100",
+                deviceType === 'mobile' ? 'w-16 h-6' : deviceType === 'tablet' ? 'w-20 h-8' : 'w-24 h-10'
+              )}></div>
+            </div>
+          </div>
         </div>
 
-        {/* Main Content */}
+        {/* Modern content grid */}
         <div className={cn(
-          "w-full rounded-md shadow-sm mb-3 transition-colors duration-300",
-          isDarkMode ? mockContentColors.dark : mockContentColors.light,
-          deviceType === 'mobile' ? 'h-40' : deviceType === 'tablet' ? 'h-48' : 'h-64'
+          "grid gap-4 mb-4",
+          deviceType === 'mobile' ? 'grid-cols-1' : deviceType === 'tablet' ? 'grid-cols-2' : 'grid-cols-3'
+        )}>
+          {Array.from({ length: deviceType === 'mobile' ? 2 : deviceType === 'tablet' ? 4 : 6 }).map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "rounded-xl shadow-sm transition-colors duration-300",
+                isDarkMode ? "bg-slate-800" : "bg-white",
+                deviceType === 'mobile' ? 'h-32' : deviceType === 'tablet' ? 'h-36' : 'h-40'
+              )}
+            ></div>
+          ))}
+        </div>
+
+        {/* Main content section */}
+        <div className={cn(
+          "w-full rounded-xl shadow-sm mb-4 transition-colors duration-300",
+          isDarkMode ? "bg-slate-800" : "bg-white",
+          deviceType === 'mobile' ? 'h-48' : deviceType === 'tablet' ? 'h-56' : 'h-64'
         )}></div>
 
-        {/* Additional Content */}
-        <div className={cn(
-          "rounded-md shadow-sm mb-3 transition-colors duration-300",
-          isDarkMode ? mockContentColors.dark : mockContentColors.light,
-          deviceType === 'mobile' ? 'w-full h-6' : deviceType === 'tablet' ? 'w-3/4 h-7' : 'w-3/4 h-8'
-        )}></div>
-
-        <div className={cn(
-          "w-full rounded-md shadow-sm transition-colors duration-300",
-          isDarkMode ? mockContentColors.dark : mockContentColors.light,
-          deviceType === 'mobile' ? 'h-24' : deviceType === 'tablet' ? 'h-28' : 'h-32'
-        )}></div>
-
-        {/* Extra content for scrolling */}
-        {deviceType !== 'desktop' && (
-          <>
-            <div className={cn(
-              "w-full rounded-md shadow-sm mt-3 transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              deviceType === 'mobile' ? 'h-20' : 'h-24'
-            )}></div>
-            <div className={cn(
-              "w-2/3 rounded-md shadow-sm mt-3 transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              deviceType === 'mobile' ? 'h-6' : 'h-7'
-            )}></div>
-            {deviceType === 'tablet' && (
-              <>
-                <div className={cn(
-                  "w-full rounded-md shadow-sm mt-3 transition-colors duration-300",
-                  isDarkMode ? mockContentColors.dark : mockContentColors.light,
-                  'h-32'
-                )}></div>
-                <div className={cn(
-                  "w-4/5 rounded-md shadow-sm mt-3 transition-colors duration-300",
-                  isDarkMode ? mockContentColors.dark : mockContentColors.light,
-                  'h-8'
-                )}></div>
-                <div className={cn(
-                  "w-full rounded-md shadow-sm mt-3 transition-colors duration-300",
-                  isDarkMode ? mockContentColors.dark : mockContentColors.light,
-                  'h-20'
-                )}></div>
-              </>
+        {/* Additional content for scrolling */}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "w-full rounded-xl shadow-sm mb-4 transition-colors duration-300",
+              isDarkMode ? "bg-slate-800" : "bg-white",
+              deviceType === 'mobile' ? 'h-24' : deviceType === 'tablet' ? 'h-28' : 'h-32'
             )}
-          </>
-        )}
-
-        {/* Desktop extra content */}
-        {deviceType === 'desktop' && (
-          <>
-            <div className={cn(
-              "w-full rounded-md shadow-sm mt-3 transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              'h-24'
-            )}></div>
-            <div className={cn(
-              "w-3/4 rounded-md shadow-sm mt-3 transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              'h-8'
-            )}></div>
-          </>
-        )}
+          ></div>
+        ))}
       </div>
 
-      {/* Widget button */}
+      {/* Modern widget button */}
       <div
         className={cn(
-          "absolute shadow-lg cursor-pointer",
+          "absolute cursor-pointer transition-all duration-300 hover:scale-105",
           currentSizing.position,
-          animationClasses,
         )}
         onClick={toggleWidget}
-        style={{
-          fontFamily,
-          zIndex: 999,
-        }}
+        style={{ fontFamily, zIndex: 999 }}
       >
         {!isOpen ? (
           <div
-            className="rounded-full flex items-center justify-center p-3 text-white overflow-hidden"
+            className="rounded-full flex items-center justify-center text-white shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm"
             style={{
               backgroundColor: primaryColor,
               width: currentSizing.iconSize,
               height: currentSizing.iconSize,
-              borderRadius:
-                config.appearance.iconStyle === "square" ? "8px" : 
-                config.appearance.iconStyle === "rounded" ? "12px" : "50%",
+              borderRadius: config.appearance?.iconStyle === "square" ? "16px" : 
+                          config.appearance?.iconStyle === "rounded" ? "20px" : "50%",
+              boxShadow: `0 8px 32px ${primaryColor}40`
             }}
           >
-            {config.appearance.avatarUrl ? (
+            {avatarUrl ? (
               <img
-                src={config.appearance.avatarUrl}
+                src={avatarUrl}
                 alt="Chat Avatar"
                 className="w-full h-full object-cover"
                 style={{
-                  borderRadius:
-                    config.appearance.iconStyle === "square" ? "6px" : 
-                    config.appearance.iconStyle === "rounded" ? "10px" : "50%",
+                  borderRadius: config.appearance?.iconStyle === "square" ? "14px" : 
+                              config.appearance?.iconStyle === "rounded" ? "18px" : "50%",
                 }}
               />
             ) : (
-              <MessageSquare size={parseInt(currentSizing.iconSize) * 0.5} />
+              <MessageSquare size={parseInt(currentSizing.iconSize) * 0.4} />
             )}
           </div>
         ) : (
           <div
             className={cn(
-              "rounded-lg shadow-lg overflow-hidden flex flex-col transition-colors duration-300",
-              getShadowClass(),
+              "rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 backdrop-blur-sm",
               isExpanded ? "fixed inset-4 h-auto" : "",
-              deviceType === 'mobile' && !isExpanded ? "fixed bottom-3 right-3 left-3" : "",
-              deviceType === 'tablet' && !isExpanded ? "fixed bottom-4 right-4 left-4" : "",
-              isDarkMode ? "bg-slate-800 text-white" : "bg-white text-slate-900"
+              deviceType === 'mobile' && !isExpanded ? "fixed bottom-4 right-4 left-4" : "",
+              deviceType === 'tablet' && !isExpanded ? "fixed bottom-5 right-5 left-5" : "",
+              isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-slate-200"
             )}
             style={{
-              borderRadius: deviceType === 'mobile' ? '12px' : borderRadius,
-              border: `1px solid ${primaryColor}20`,
-              width: isExpanded ? 'auto' : (deviceType === 'mobile' || deviceType === 'tablet' ? 'auto' : widgetConstraints.width),
-              height: isExpanded ? 'auto' : widgetConstraints.height,
-              maxWidth: deviceType === 'mobile' || deviceType === 'tablet' ? 'none' : widgetConstraints.maxWidth,
-              maxHeight: widgetConstraints.maxHeight,
-              opacity: backgroundOpacity / 100,
+              width: isExpanded ? 'auto' : (deviceType === 'mobile' || deviceType === 'tablet' ? 'auto' : currentSizing.widgetWidth),
+              height: isExpanded ? 'auto' : currentSizing.widgetHeight,
+              maxHeight: deviceType === 'mobile' ? '90vh' : '85vh',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* Modern header with gradient */}
             <div
-              className={cn(
-                "flex items-center justify-between",
-                deviceType === 'mobile' ? 'p-2' : deviceType === 'tablet' ? 'p-3' : 'p-4'
-              )}
-              style={getHeaderStyleProps()}
+              className="flex items-center justify-between p-4 relative overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}E6 100%)`,
+                color: headerTextColor
+              }}
             >
-              <div className="flex items-center gap-2">
-                {config.appearance.avatarUrl ? (
+              <div className="absolute inset-0 bg-black bg-opacity-5"></div>
+              <div className="flex items-center gap-3 relative z-10">
+                {avatarUrl ? (
                   <img
-                    src={config.appearance.avatarUrl}
+                    src={avatarUrl}
                     alt="Bot Avatar"
-                    className="w-8 h-8 rounded-full object-cover border-2 border-white border-opacity-20"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-white border-opacity-30 shadow-sm"
                   />
-                ) : config.appearance.theme === "modern" && (
-                  <div className="bg-white bg-opacity-20 p-1.5 rounded">
-                    <MessageSquare size={16} className="text-white" />
+                ) : (
+                  <div className="bg-white bg-opacity-20 p-2 rounded-full shadow-sm">
+                    <MessageSquare size={18} className="text-white" />
                   </div>
                 )}
                 <div>
-                  <h3 className={cn(
-                    "font-medium text-white",
-                    getTypographyClasses('header')
-                  )}>
-                    {config.content.headerTitle}
+                  <h3 className="font-semibold text-white text-sm">
+                    {config.content?.headerTitle || 'Support Assistant'}
                   </h3>
-                  <p className={cn(
-                    "text-white text-opacity-80",
-                    fontSize === "small" ? "text-[10px]" : "text-xs"
-                  )}>Online</p>
+                  <p className="text-white text-opacity-80 text-xs">
+                    Online now
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 relative z-10">
                 <button
                   onClick={toggleExpand}
-                  className="p-1 rounded-full hover:bg-white hover:bg-opacity-10 text-white"
+                  className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 text-white transition-colors duration-200"
                 >
-                  {isExpanded ? (
-                    <Minimize2 size={14} />
-                  ) : (
-                    <Maximize2 size={14} />
-                  )}
+                  {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
                 </button>
                 <button
                   onClick={toggleWidget}
-                  className="p-1 rounded-full hover:bg-white hover:bg-opacity-10 text-white"
+                  className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 text-white transition-colors duration-200"
                 >
-                  <X size={14} />
+                  <X size={16} />
                 </button>
               </div>
             </div>
 
-            {renderChatContent()}
-
-            {/* Branding */}
-            {config.appearance.theme === "modern" && (
-              <div className={cn(
-                "py-1 px-3 border-t text-center transition-colors duration-300",
-                isDarkMode
-                  ? "bg-slate-900 border-slate-600"
-                  : "bg-slate-50 border-slate-200"
-              )}>
-                <p className={cn(
-                  "text-[10px] transition-colors duration-300",
-                  isDarkMode ? "text-slate-500" : "text-slate-400"
-                )}
-                  style={{ fontFamily }}
-                >
-                  Powered by ChatAdmin
-                </p>
-              </div>
-            )}
+            {/* Chat content */}
+            <div className="flex-1 overflow-hidden">
+              {renderChatContent()}
+            </div>
           </div>
         )}
       </div>
