@@ -17,6 +17,15 @@ export interface Widget {
   updated_at?: string;
 }
 
+export interface WidgetData {
+  name: string;
+  description: string;
+  appearance_config: any;
+  behavior_config: any;
+  content_config: any;
+  embedding_config: any;
+}
+
 export interface WidgetListResponse {
   widgets: Widget[];
   total: number;
@@ -110,6 +119,31 @@ export const getWidgetConfig = async (id: string): Promise<any> => {
   }
 };
 
+export const getWidgetEmbedCode = async (id: string): Promise<{ embed_code: string }> => {
+  try {
+    const response = await apiService.get(`/api/widgets/${id}/embed-code`);
+    const data = response.data as any;
+    return data || { embed_code: `<script src="https://example.com/widget.js" id="chat-widget" data-id="${id}"></script>` };
+  } catch (error) {
+    console.error('Error fetching widget embed code:', error);
+    return { embed_code: `<script src="https://example.com/widget.js" id="chat-widget" data-id="${id}"></script>` };
+  }
+};
+
+export const loadDefaultFormTemplate = async (widgetData: WidgetData, formType: string): Promise<WidgetData> => {
+  try {
+    const response = await apiService.post('/api/form-templates/load-default', {
+      widget_data: widgetData,
+      form_type: formType
+    });
+    const data = response.data as any;
+    return data.widget_data || widgetData;
+  } catch (error) {
+    console.error('Error loading form template:', error);
+    return widgetData;
+  }
+};
+
 export const widgetService = {
   getWidgets,
   getWidget,
@@ -119,6 +153,8 @@ export const widgetService = {
   publishWidget,
   unpublishWidget,
   getWidgetConfig,
+  getWidgetEmbedCode,
+  loadDefaultFormTemplate,
 };
 
 export default widgetService;

@@ -40,7 +40,7 @@ export default function WidgetListing() {
     try {
       setLoading(true);
       const response = await widgetService.getWidgets();
-      setWidgets(response.widgets || []);
+      setWidgets(response || []);
     } catch (error) {
       console.error("Error fetching widgets:", error);
       toast({
@@ -55,7 +55,7 @@ export default function WidgetListing() {
 
   const handleDeleteWidget = async (id: string | number) => {
     try {
-      await widgetService.deleteWidget(id);
+      await widgetService.deleteWidget(String(id));
       setWidgets(widgets.filter((w) => w.id !== id));
       toast({
         title: "Success",

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -338,6 +337,10 @@ const WidgetConfigurator = () => {
       const widgetData = {
         name: config.name,
         description: config.description,
+        widget_id: config.widget_id || '',
+        is_active: config.is_active,
+        is_published: config.is_published,
+        status: config.status,
         appearance_config: config.appearance_config,
         behavior_config: config.behavior_config,
         content_config: config.content_config,

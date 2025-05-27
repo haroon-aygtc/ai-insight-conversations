@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import widgetService from "@/services/widgetService";
+import { widgetService } from "@/services/widgetService";
 import {
   Card,
   CardContent,
@@ -86,7 +85,7 @@ export default function WidgetTesting() {
       setLoading(true);
       const data = await widgetService.getWidgets();
       // Ensure data is an array
-      const widgetsArray = Array.isArray(data.widgets) ? data.widgets : [];
+      const widgetsArray = Array.isArray(data) ? data : [];
       setWidgets(widgetsArray);
 
       // If no widget ID is provided in URL, select the first widget
