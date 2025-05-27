@@ -13,6 +13,14 @@ import WidgetPreviewPage from "@/pages/WidgetPreview";
 import Index from "@/pages/Index";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
+import Roles from "@/pages/Roles";
+import Users from "@/pages/Users";
+import Permissions from "@/pages/Permissions";
+import ContextRules from "@/pages/ContextRules";
+import Templates from "@/pages/Templates";
+import AIHub from "@/pages/AIHub";
+import AIModelManager from "@/pages/AIModelManager";
+import AIProviderManager from "@/pages/AIProviderManager";
 import "./App.css";
 
 function App() {
@@ -82,29 +90,20 @@ function App() {
           {/* Widget Preview (standalone) */}
           <Route path="/widget-preview/:id" element={<WidgetPreviewPage />} />
           
-          {/* Content & AI Routes */}
+          {/* Content & AI Routes - Using actual components */}
           <Route path="/context-rules" element={
             <EnhancedMainLayout>
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">Context Rules</h1>
-                <p className="text-muted-foreground">Configure AI behavior rules and context management.</p>
-              </div>
+              <ContextRules />
             </EnhancedMainLayout>
           } />
           <Route path="/templates" element={
             <EnhancedMainLayout>
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">Templates</h1>
-                <p className="text-muted-foreground">Manage reusable widget templates and configurations.</p>
-              </div>
+              <Templates />
             </EnhancedMainLayout>
           } />
           <Route path="/ai-hub" element={
             <EnhancedMainLayout>
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">AI Hub</h1>
-                <p className="text-muted-foreground">Central hub for AI model management and configuration.</p>
-              </div>
+              <AIHub />
             </EnhancedMainLayout>
           } />
           <Route path="/ai-module" element={
@@ -117,44 +116,29 @@ function App() {
           } />
           <Route path="/ai-model-manager" element={
             <EnhancedMainLayout>
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">AI Model Manager</h1>
-                <p className="text-muted-foreground">Manage and configure AI models.</p>
-              </div>
+              <AIModelManager />
             </EnhancedMainLayout>
           } />
           <Route path="/ai-provider-manager" element={
             <EnhancedMainLayout>
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">AI Provider Manager</h1>
-                <p className="text-muted-foreground">Configure AI service providers and connections.</p>
-              </div>
+              <AIProviderManager />
             </EnhancedMainLayout>
           } />
           
-          {/* Administration Routes */}
+          {/* Administration Routes - Using actual components */}
           <Route path="/users" element={
             <EnhancedMainLayout>
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">Users</h1>
-                <p className="text-muted-foreground">Manage user accounts and permissions.</p>
-              </div>
+              <Users />
             </EnhancedMainLayout>
           } />
           <Route path="/roles" element={
             <EnhancedMainLayout>
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">Roles</h1>
-                <p className="text-muted-foreground">Configure user roles and access levels.</p>
-              </div>
+              <Roles />
             </EnhancedMainLayout>
           } />
           <Route path="/permissions" element={
             <EnhancedMainLayout>
-              <div className="p-6">
-                <h1 className="text-2xl font-bold">Permissions</h1>
-                <p className="text-muted-foreground">Manage granular permissions and access control.</p>
-              </div>
+              <Permissions />
             </EnhancedMainLayout>
           } />
           <Route path="/notifications" element={
