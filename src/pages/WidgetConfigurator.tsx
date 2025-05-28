@@ -250,7 +250,7 @@ const WidgetConfigurator = () => {
         widget_id: widgetData.widget_id,
         name: widgetData.name,
         description: widgetData.description,
-        is_active: widgetData.is_active,
+       is_active: widgetData.is_active,
         is_published: widgetData.is_published,
         status: widgetData.status,
         appearance_config: {
@@ -374,20 +374,16 @@ const WidgetConfigurator = () => {
     try {
       let savedWidget;
 
-      const widgetData = {
+      const widgetData: widgetService.WidgetData = {
         name: config.name,
         description: config.description,
-        widget_id: config.widget_id || "",
-        is_active: config.is_active,
-        is_published: config.is_published,
-        status: config.status,
-        appearance_config: config.appearance_config,
-        behavior_config: config.behavior_config,
-        content_config: config.content_config,
+        appearance_config: config.appearance_config as widgetService.AppearanceConfig,
+        behavior_config: config.behavior_config as widgetService.BehaviorConfig,
+        content_config: config.content_config as widgetService.ContentConfig,
         embedding_config: {
           ...config.embedding_config,
-          widgetId: undefined,
-        },
+          widgetId: undefined
+        } as widgetService.EmbeddingConfig,
       };
 
       if (config.id) {

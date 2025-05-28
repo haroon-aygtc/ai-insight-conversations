@@ -228,6 +228,214 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
     }
 
     return null;
+  }
+
+  // Apply theme colors
+  const primaryColor = config.appearance.primaryColor;
+  const borderRadius = `${config.appearance.borderRadius}px`;
+  const iconSize = `${config.appearance.chatIconSize}px`;
+  const fontFamily = config.appearance.fontFamily || "system-ui";
+
+  // Extract typography settings with defaults
+  const fontSize = config.appearance.fontSize || "medium";
+  const fontWeight = config.appearance.fontWeight || "normal";
+  const textColor = config.appearance.textColor || "#333333";
+  const headerTextColor = config.appearance.headerTextColor || "#ffffff";
+
+  // Extract layout settings with defaults
+  const headerStyle = config.appearance.headerStyle || "solid";
+  const buttonStyle = config.appearance.buttonStyle || "rounded";
+  const gradientEnabled = config.appearance.gradientEnabled || false;
+  const shadowIntensity = config.appearance.shadowIntensity || 2;
+  const backgroundOpacity = config.appearance.backgroundOpacity || 100;
+
+  // Font size mapping
+  const fontSizeMap = {
+    small: {
+      header: "text-xs",
+      message: "text-xs",
+      input: "text-xs",
+    },
+    medium: {
+      header: "text-sm",
+      message: "text-sm",
+      input: "text-sm",
+    },
+    large: {
+      header: "text-base",
+      message: "text-base",
+      input: "text-base",
+    }
+  };
+
+  // Font weight mapping
+  const fontWeightMap = {
+    light: "font-light",
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold"
+  };
+
+  // Get font classes
+  const getTypographyClasses = (element) => {
+    const size = fontSizeMap[fontSize] || fontSizeMap.medium;
+    const weight = fontWeightMap[fontWeight] || fontWeightMap.normal;
+    return `${size[element]} ${weight}`;
+  };
+
+  // Device-responsive sizing
+  const deviceSizing = {
+    desktop: {
+      widgetWidth: "w-80",
+      widgetHeight: "h-96",
+      iconSize: iconSize,
+      fontSize: "text-sm",
+      padding: "p-4",
+      gap: "gap-4",
+      position: "bottom-4 right-4"
+    },
+    tablet: {
+      widgetWidth: "w-72",
+      widgetHeight: "h-80",
+      iconSize: `${Math.max(48, parseInt(iconSize) * 1.1)}px`,
+      fontSize: "text-sm",
+      padding: "p-3",
+      gap: "gap-3",
+      position: "bottom-4 right-4"
+    },
+    mobile: {
+      widgetWidth: "w-64",
+      widgetHeight: "h-72",
+      iconSize: `${Math.max(48, parseInt(iconSize) * 1.1)}px`,
+      fontSize: "text-sm",
+      padding: "p-3",
+      gap: "gap-3",
+      position: "bottom-3 right-3"
+    }
+  };
+
+  const currentSizing = deviceSizing[deviceType];
+
+  // Adjust widget size for mobile/tablet to fit in device frame
+  const getWidgetConstraints = () => {
+    if (deviceType === 'mobile') {
+      return {
+        maxWidth: '95%',
+        maxHeight: '90%',
+        width: '320px',
+        height: '500px'
+      };
+    }
+    if (deviceType === 'tablet') {
+      return {
+        maxWidth: '90%',
+        maxHeight: '85%',
+        width: '480px',
+        height: '600px'
+      };
+    }
+    return {
+      maxWidth: '320px',
+      maxHeight: '384px',
+      width: '320px',
+      height: '384px'
+    };
+  };
+
+  const widgetConstraints = getWidgetConstraints();
+
+  // Animation classes
+  const animationClasses =
+    {
+      fade: "transition-opacity duration-300",
+      slide: "transition-transform duration-300",
+      bounce: "animate-bounce",
+      none: "",
+    }[config.behavior.animation] || "fade";
+
+  // Apply theme mode
+  const themeMode = config.appearance.theme || 'light';
+  const isDarkMode = themeMode === 'dark' || (themeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  // Theme-aware colors
+  const backgroundColors = {
+    light: 'bg-slate-50',
+    dark: 'bg-slate-900'
+  };
+
+  const mockContentColors = {
+    light: 'bg-white',
+    dark: 'bg-slate-800'
+  };
+
+  const browserBarColors = {
+    light: 'bg-slate-200',
+    dark: 'bg-slate-700'
+  };
+
+  // Get button style classes
+  const getButtonStyleClasses = (style = buttonStyle) => {
+    switch (style) {
+      case 'pill':
+        return 'rounded-full';
+      case 'square':
+        return 'rounded-sm';
+      case 'minimal':
+        return 'rounded-md border-0 shadow-none';
+      case 'rounded':
+      default:
+        return 'rounded-md';
+    }
+  };
+
+  // Get header style properties
+  const getHeaderStyleProps = () => {
+    let styles: React.CSSProperties = { 
+      backgroundColor: primaryColor, 
+      fontFamily,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)' 
+    };
+
+    if (headerStyle === 'gradient') {
+      styles = {
+        ...styles,
+        backgroundImage: `linear-gradient(to right, ${primaryColor}, ${adjustColor(primaryColor, 30)})`,
+      };
+    } else if (headerStyle === 'glass') {
+      styles = {
+        ...styles,
+        backgroundColor: `${primaryColor}CC`, // Add transparency
+        backdropFilter: 'blur(10px)',
+      };
+    } else if (headerStyle === 'flat') {
+      styles = {
+        ...styles,
+        boxShadow: 'none',
+        borderBottom: '1px solid rgba(0,0,0,0.1)',
+      };
+    }
+
+    return styles;
+  };
+
+  // Get shadow class based on intensity
+  const getShadowClass = (intensity = shadowIntensity) => {
+    const shadowMap = {
+      0: 'shadow-none',
+      1: 'shadow-sm',
+      2: 'shadow',
+      3: 'shadow-md',
+      4: 'shadow-lg',
+      5: 'shadow-xl',
+    };
+    return shadowMap[intensity] || 'shadow';
+  };
+
+  // Helper function to adjust a color's brightness
+  const adjustColor = (color, amount) => {
+    // Simple color adjustment for demo purposes
+    return color;
   };
 
   return (
@@ -433,7 +641,8 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
         ) : (
           <div
             className={cn(
-              "rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 backdrop-blur-sm",
+              "rounded-lg shadow-lg overflow-hidden flex flex-col transition-all duration-300",
+              getShadowClass(),
               isExpanded ? "fixed inset-4 h-auto" : "",
               deviceType === "mobile" && !isExpanded
                 ? "fixed bottom-4 right-4 left-4"
@@ -458,38 +667,42 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
           >
             {/* Modern header with gradient */}
             <div
-              className="flex items-center justify-between p-4 relative overflow-hidden"
+              className={cn(
+                "flex items-center justify-between",
+                deviceType === 'mobile' ? 'p-3' : deviceType === 'tablet' ? 'p-3.5' : 'p-4'
+              )}
               style={{
-                background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}E6 100%)`,
-                color: headerTextColor,
+                ...getHeaderStyleProps(),
+                borderTopLeftRadius: deviceType === 'mobile' ? '12px' : borderRadius,
+                borderTopRightRadius: deviceType === 'mobile' ? '12px' : borderRadius,
               }}
             >
-              <div className="absolute inset-0 bg-black bg-opacity-5"></div>
-              <div className="flex items-center gap-3 relative z-10">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="Bot Avatar"
-                    className="w-10 h-10 rounded-full object-cover border-2 border-white border-opacity-30 shadow-sm"
-                  />
-                ) : (
-                  <div className="bg-white bg-opacity-20 p-2 rounded-full shadow-sm">
+              <div className="flex items-center gap-2.5">
+                {config.appearance.theme === "modern" && (
+                  <div className="bg-white bg-opacity-20 p-1.5 rounded-md flex items-center justify-center">
                     <MessageSquare size={18} className="text-white" />
                   </div>
                 )}
                 <div>
-                  <h3 className="font-semibold text-white text-sm">
-                    {config.content?.headerTitle || "Support Assistant"}
+                  <h3 className={cn(
+                    "font-semibold text-white tracking-tight",
+                    getTypographyClasses('header')
+                  )}>
+                    {config.content.headerTitle || 'Chat Support'}
                   </h3>
-                  <p className="text-white text-opacity-80 text-xs">
-                    Online now
+                  <p className={cn(
+                    "text-white text-opacity-90 flex items-center gap-1.5",
+                    fontSize === "small" ? "text-[10px]" : "text-xs"
+                  )}>
+                    <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                    Online
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 relative z-10">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={toggleExpand}
-                  className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 text-white transition-colors duration-200"
+                  className="p-1.5 rounded-md hover:bg-white hover:bg-opacity-10 text-white transition-colors duration-150"
                 >
                   {isExpanded ? (
                     <Minimize2 size={16} />
@@ -499,15 +712,34 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
                 </button>
                 <button
                   onClick={toggleWidget}
-                  className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 text-white transition-colors duration-200"
+                  className="p-1.5 rounded-md hover:bg-white hover:bg-opacity-10 text-white transition-colors duration-150"
                 >
                   <X size={16} />
                 </button>
               </div>
             </div>
 
-            {/* Chat content */}
-            <div className="flex-1 overflow-hidden">{renderChatContent()}</div>
+            {renderChatContent()}
+
+            {/* Branding */}
+            {config.appearance.theme === "modern" && (
+              <div className={cn(
+                "py-1.5 px-3 border-t text-center transition-colors duration-300",
+                isDarkMode
+                  ? "bg-slate-900 border-slate-700/50"
+                  : "bg-slate-50 border-slate-200/70"
+              )}>
+                <p className={cn(
+                  "text-[10px] transition-colors duration-300 flex items-center justify-center gap-1",
+                  isDarkMode ? "text-slate-500" : "text-slate-400"
+                )}
+                  style={{ fontFamily }}
+                >
+                  <span>Powered by</span>
+                  <span className="font-semibold">AI Insight</span>
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,4 +1,6 @@
 import apiService from './api';
+import * as RoleConstants from '@/constants/roles';
+import * as PermissionConstants from '@/constants/permissions';
 
 export interface User {
   id: number;
@@ -6,9 +8,10 @@ export interface User {
   last_name: string;
   full_name: string;
   email: string;
-  phone: string;
-  roles: string[];
-  permissions: string[];
+  phone: string | null;
+  roles: Array<string | { id: number; name: string; guard_name: string; description?: string; created_at?: string; updated_at?: string; pivot?: any }>;
+  permissions: Array<string | { id: number; name: string; guard_name: string; created_at?: string; updated_at?: string; pivot?: any }>;
+  last_activity?: string;
 }
 
 export interface LoginCredentials {
@@ -21,7 +24,7 @@ export interface RegisterData {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone?: string;
   password: string;
   password_confirmation: string;
 }
@@ -32,11 +35,13 @@ export interface AuthResponse {
 }
 
 export interface ActivityLog {
-  id: string;
+  id: number;
+  user_id: number;
   action: string;
-  timestamp: string;
-  details: string;
-  ip_address?: string;
+  description: string;
+  ip_address: string;
+  user_agent?: string;
+  created_at: string;
 }
 
 export interface SessionInfo {
@@ -50,156 +55,142 @@ export interface SessionInfo {
 export interface ActivityLogsResponse {
   logs: ActivityLog[];
   total: number;
+  page: number;
+  perPage: number;
 }
 
-class AuthService {
-  user: User | null = null;
+/**
+ * Get the currently authenticated user
+ */
+export const getCurrentUser = async (): Promise<User> => {
+  try {
+    const response = await apiService.get<{ user: User }>('/auth/user');
 
-  async login(credentials: LoginCredentials): Promise<User> {
-    try {
-      await apiService.getCsrfToken(true);
-      const response = await apiService.post<AuthResponse>('/auth/login', credentials);
-      
-      if (response.data?.user) {
-        this.user = response.data.user;
-        sessionStorage.setItem('user', JSON.stringify(this.user));
-        return this.user;
-      }
-      
-      throw new Error('Invalid login response');
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    if (!response.data || !response.data.user) {
+      throw new Error('Invalid response format from auth API');
     }
-  }
 
-  async register(data: RegisterData): Promise<User> {
-    try {
-      await apiService.getCsrfToken(true);
-      const response = await apiService.post<AuthResponse>('/auth/register', data);
-      
-      if (response.data?.user) {
-        this.user = response.data.user;
-        sessionStorage.setItem('user', JSON.stringify(this.user));
-        return this.user;
-      }
-      
-      throw new Error('Invalid registration response');
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
+    return response.data.user;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    throw error;
+  }
+};
+
+/**
+ * Login a user with credentials
+ */
+export const login = async (credentials: LoginCredentials): Promise<User> => {
+  try {
+    const response = await apiService.post<{ user: User }>('/auth/login', credentials);
+
+    if (!response.data || !response.data.user) {
+      throw new Error('Invalid response format from login API');
     }
-  }
 
-  async logout(): Promise<void> {
-    try {
-      await apiService.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      this.clearAuth();
+    return response.data.user;
+  } catch (error: any) {
+    console.error('Login error:', error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
     }
+    throw new Error('Invalid credentials or server error');
   }
+};
 
-  async getCurrentUser(): Promise<User> {
-    try {
-      const storedUser = this.getStoredUser();
-      if (storedUser) {
-        this.user = storedUser;
-        return storedUser;
-      }
+/**
+ * Register a new user
+ */
+export const register = async (data: RegisterData): Promise<User> => {
+  try {
+    const response = await apiService.post<{ user: User }>('/auth/register', data);
 
-      const response = await apiService.get<{ user: User }>('/auth/user');
-      
-      if (response.data?.user) {
-        this.user = response.data.user;
-        sessionStorage.setItem('user', JSON.stringify(this.user));
-        return this.user;
-      }
-      
-      throw new Error('User not authenticated');
-    } catch (error) {
-      console.error('Error getting current user:', error);
-      this.clearAuth();
-      throw error;
+    if (!response.data || !response.data.user) {
+      throw new Error('Invalid response format from register API');
     }
-  }
 
-  getStoredUser(): User | null {
-    const userJson = sessionStorage.getItem('user');
-    if (userJson) {
-      try {
-        return JSON.parse(userJson);
-      } catch (e) {
-        console.error('Error parsing stored user:', e);
-        sessionStorage.removeItem('user');
-      }
+    return response.data.user;
+  } catch (error: any) {
+    console.error('Registration error:', error);
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
     }
-    return null;
+    throw new Error('Registration failed. Please try again.');
   }
+};
 
-  isAuthenticated(): boolean {
-    return !!this.getStoredUser();
+/**
+ * Log out the current user
+ */
+export const logout = async (): Promise<void> => {
+  try {
+    await apiService.post('/auth/logout');
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw error;
   }
+};
 
-  hasRole(role: string): boolean {
-    const user = this.getStoredUser();
-    return !!user && Array.isArray(user.roles) && user.roles.includes(role);
+/**
+ * Log out from all devices
+ */
+export const logoutAllDevices = async (): Promise<void> => {
+  try {
+    await apiService.post('/auth/logout-all-devices');
+  } catch (error) {
+    console.error('Logout all devices error:', error);
+    throw error;
   }
+};
 
-  hasPermission(permission: string): boolean {
-    const user = this.getStoredUser();
-    return !!user && Array.isArray(user.permissions) && user.permissions.includes(permission);
-  }
+/**
+ * Refresh authentication
+ */
+export const refreshAuth = async (): Promise<User> => {
+  try {
+    const response = await apiService.post<{ user: User }>('/auth/refresh');
 
-  clearAuth(): void {
-    this.user = null;
-    sessionStorage.removeItem('user');
-  }
-
-  async getActivityLogs(): Promise<{ logs: ActivityLog[]; total: number }> {
-    try {
-      const response = await apiService.get('/api/user/activity-logs');
-      const data = response.data as any;
-      return {
-        logs: data.logs || [],
-        total: data.total || 0
-      };
-    } catch (error) {
-      console.error('Error fetching activity logs:', error);
-      return { logs: [], total: 0 };
+    if (!response.data || !response.data.user) {
+      throw new Error('Invalid response format from refresh API');
     }
-  }
 
-  async getActiveSessions(): Promise<SessionInfo[]> {
-    try {
-      const response = await apiService.get('/api/user/sessions');
-      const data = response.data as any;
-      return data.sessions || [];
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
-      return [];
+    return response.data.user;
+  } catch (error) {
+    console.error('Refresh auth error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get user activity logs
+ */
+export const getActivityLogs = async (page: number = 1, perPage: number = 20): Promise<ActivityLogsResponse> => {
+  try {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page.toString());
+    queryParams.append('per_page', perPage.toString());
+
+    const response = await apiService.get<ActivityLogsResponse>(`/auth/activity-logs?${queryParams.toString()}`);
+
+    if (!response.data) {
+      throw new Error('Invalid response format from activity logs API');
     }
-  }
 
-  async terminateSession(sessionId: string): Promise<void> {
-    try {
-      await apiService.delete(`/api/user/sessions/${sessionId}`);
-    } catch (error) {
-      console.error('Error terminating session:', error);
-      throw error;
-    }
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching activity logs:', error);
+    throw error;
   }
+};
 
-  async logoutAllDevices(): Promise<void> {
-    try {
-      await apiService.post('/api/user/logout-all');
-    } catch (error) {
-      console.error('Error logging out all devices:', error);
-      throw error;
-    }
-  }
-}
+export const authService = {
+  getCurrentUser,
+  login,
+  register,
+  logout,
+  logoutAllDevices,
+  refreshAuth,
+  getActivityLogs
+};
 
-export const authService = new AuthService();
 export default authService;

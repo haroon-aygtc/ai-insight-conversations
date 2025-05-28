@@ -84,6 +84,20 @@ class AuthController extends Controller
         // Log successful login
         $this->recordActivity($user->id, 'login', 'User logged in successfully', $request);
 
+        // Get all permissions, including those from roles
+        $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+
+        // Ensure critical permissions are included for super_admin
+        if ($user->hasRole('super_admin')) {
+            $criticalPermissions = [
+                'user.view', 'user.create', 'user.edit', 'user.delete',
+                'role.view', 'role.create', 'role.edit', 'role.delete',
+                'permission.view', 'permission.assign'
+            ];
+
+            $permissions = array_unique(array_merge($permissions, $criticalPermissions));
+        }
+
         return response()->json([
             'message' => 'Login successful',
             'user' => [
@@ -94,7 +108,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'roles' => $user->getRoleNames(),
-                'permissions' => $user->getAllPermissions()->pluck('name'),
+                'permissions' => $permissions,
                 'session_id' => session()->getId(),
                 'last_activity' => now()->toISOString(),
             ],
@@ -110,6 +124,20 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
+        // Get all permissions, including those from roles
+        $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+
+        // Ensure critical permissions are included for super_admin
+        if ($user->hasRole('super_admin')) {
+            $criticalPermissions = [
+                'user.view', 'user.create', 'user.edit', 'user.delete',
+                'role.view', 'role.create', 'role.edit', 'role.delete',
+                'permission.view', 'permission.assign'
+            ];
+
+            $permissions = array_unique(array_merge($permissions, $criticalPermissions));
+        }
+
         return response()->json([
             'user' => [
                 'id' => $user->id,
@@ -119,8 +147,9 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'roles' => $user->getRoleNames(),
-                'permissions' => $user->getAllPermissions()->pluck('name'),
-            ],
+                'permissions' => $permissions,
+                'last_activity' => now()->toISOString(),
+            ]
         ]);
     }
 
@@ -129,18 +158,32 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $user = Auth::user();
+        $user = $request->user();
 
         // Log logout activity
         if ($user) {
             $this->recordActivity($user->id, 'logout', 'User logged out', $request);
+
+            // Remove session from user_sessions table
+            UserSession::where('id', session()->getId())->delete();
+
+            // For Sanctum token-based authentication
+            if ($request->bearerToken()) {
+                // Find and delete the specific token
+                $hashedToken = hash('sha256', $request->bearerToken());
+                $user->tokens()->where('token', $hashedToken)->delete();
+            } else {
+                // For session-based authentication, we don't need to delete tokens
+                // The session invalidation below handles the logout
+                // Only delete actual API tokens if they exist
+                $currentToken = $user->currentAccessToken();
+                if ($currentToken && !($currentToken instanceof \Laravel\Sanctum\TransientToken)) {
+                    $currentToken->delete();
+                }
+            }
         }
 
-        // Remove session from user_sessions table
-        UserSession::where('id', session()->getId())->delete();
-
-        Auth::logout();
-
+        // Clear session
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -154,7 +197,11 @@ class AuthController extends Controller
      */
     public function logoutAllDevices(Request $request): JsonResponse
     {
-        $user = Auth::user();
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
 
         // Log activity
         $this->recordActivity($user->id, 'logout_all_devices', 'User logged out from all devices', $request);
@@ -162,8 +209,10 @@ class AuthController extends Controller
         // Delete all user sessions
         UserSession::where('user_id', $user->id)->delete();
 
-        // Logout current session
-        Auth::logout();
+        // Revoke all actual API tokens for this user (not TransientTokens)
+        $user->tokens()->delete();
+
+        // Clear current session
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -299,7 +348,7 @@ class AuthController extends Controller
             'message' => 'Activity logged successfully',
         ]);
     }
-    
+
     /**
      * Refresh the user's session without redirecting
      * This is used to silently refresh authentication during widget operations
@@ -308,26 +357,26 @@ class AuthController extends Controller
     {
         // Get the current user
         $user = Auth::user();
-        
+
         if (!$user) {
             return response()->json([
                 'message' => 'Unauthenticated',
             ], 401);
         }
-        
+
         // Regenerate the session ID to prevent session fixation
         Session::regenerate();
-        
+
         // Update the session expiration time
         $expiresAt = now()->addMinutes(config('session.lifetime', 240));
-        
+
         // Update the user session record
         UserSession::where('id', session()->getId())
             ->update([
                 'last_activity' => now()->timestamp,
                 'expires_at' => $expiresAt,
             ]);
-        
+
         // Log this activity
         $this->recordActivity(
             $user->id,
@@ -335,7 +384,7 @@ class AuthController extends Controller
             'Session refreshed during widget operation',
             $request
         );
-        
+
         return response()->json([
             'message' => 'Session refreshed successfully',
             'expires_at' => $expiresAt->toISOString(),

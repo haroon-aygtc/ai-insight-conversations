@@ -1,0 +1,70 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+
+
+
+
+Recommendations for Improvements
+Immediate Fixes
+Standardize Permission Format: Consolidate to dot notation (e.g., category.action)
+Remove Duplicate Seeders: Keep only RolesAndPermissionsSeeder.php and update it
+Complete Route Protection: Apply permission middleware to all sensitive routes
+Fix Frontend Permission Checking: Ensure consistent checking methods
+Architectural Improvements
+Permission Caching: Implement better permission caching for improved performance
+Role Inheritance: Add support for role hierarchies
+Fine-grained Permissions: Split some broad permissions into more specific ones
+Permission Groups: Formally implement permission grouping in the data model
+Development Practices
+Permission Constants: Create a central file for permission name constants
+Permission Documentation: Add better comments and documentation for permissions
+Permission Testing: Add tests for permission verification
+UI Improvements: Enhance permission management interfaces
+6. Production-Ready vs. Incomplete Functionality
+Production-Ready
+Basic Role Assignment: Assigning roles to users works correctly
+Permission Checking API: Backend APIs for checking permissions function well
+Authentication Integration: Login/logout with role-based access works
+Route Protection: Core route protection via middleware is functional
+Incomplete/Needs Work
+Permission Management UI: Limited interfaces for managing permissions
+Role Management: Needs better UI for creating and managing roles
+Permission Consistency: Naming conventions need standardization
+Permission Inheritance: No support for hierarchical permissions
+
+Audit Logging: Limited logging of permission-related activitiesGeneral System Principles
+Separation of Responsibility: Clear split between frontend, backend, API logic, and UI layer.
+
+
+
+
+No Mocks in Production Code: All integrations must be real, connected to live endpoints unless explicitly marked for dev.
+
+Live Preview as First-Class Feature: All user-facing config tools must provide real-time preview updates that match runtime output.
+
+No Over-Engineering: Stick to the plan and spec. No feature-creep, premature optimization, or subjective refactors without value.
+
+Declarative, Composable, Predictable. Favor configuration-driven systems with minimal hardcoded logic.
+
+
+
+❌ Mock data or fake logic in production
+
+❌ Copy-pasted logic across components/modules
+
+❌ Console errors or unhandled promises
+
+❌ Silent failing API calls or “optimistic” assumptions
+
+❌ UI showing success when API failed
+
+❌ Duplicate logic across components
+
+❌ Untracked or unvalidated dynamic behavior
+
+
+❌ Silent failures or ignored API responses
