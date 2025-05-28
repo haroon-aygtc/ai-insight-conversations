@@ -11,12 +11,14 @@ import { Download, Share2 } from "lucide-react";
 
 interface WidgetTestingPlatformProps {
   widgetId: string;
-  config: any;
+  config?: any;
+  deviceType?: 'desktop' | 'tablet' | 'mobile';
 }
 
 export const WidgetTestingPlatform = ({
   widgetId,
   config,
+  deviceType = 'desktop',
 }: WidgetTestingPlatformProps) => {
   const [activeTab, setActiveTab] = useState("preview");
   const [environment, setEnvironment] = useState("development");

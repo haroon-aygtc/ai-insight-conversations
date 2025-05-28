@@ -1,5 +1,4 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from 'react-router-dom';
 import {
   BarChartBig,
   MessageSquare,
@@ -10,41 +9,19 @@ import {
   Database,
   Users,
   Bell,
+  TestTube,
   BrainCircuit,
-  Shield,
   Cloud,
   Sparkles,
-  TestTube,
-} from "lucide-react";
+  Shield
+} from 'lucide-react';
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
-
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  BarChartBig, 
-  MessageSquare, 
-  Settings, 
-  PanelLeft, 
-  FileText, 
-  Box, 
-  Database, 
-  Users, 
-  Bell,
-  TestTube
-} from 'lucide-react';
-import { 
-  SidebarGroup, 
-  SidebarGroupContent, 
-  SidebarGroupLabel, 
-  SidebarMenu, 
-  SidebarMenuItem, 
-  SidebarMenuButton 
+  SidebarMenuButton
 } from "@/components/ui/sidebar";
 
 export const SidebarNavigation = () => {
@@ -80,15 +57,10 @@ export const SidebarNavigation = () => {
       path: "/widget-testing",
       icon: <TestTube size={20} />,
     },
-    { 
-      label: "Widget Testing", 
-      path: "/widget-testing", 
-      icon: <TestTube size={20} /> 
-    },
-    { 
-      label: "Context Rules", 
-      path: "/context-rules", 
-      icon: <FileText size={20} /> 
+    {
+      label: "Context Rules",
+      path: "/context-rules",
+      icon: <FileText size={20} />
     },
     {
       label: "Templates",

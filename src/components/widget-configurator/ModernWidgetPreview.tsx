@@ -12,20 +12,31 @@ import {
   AlertCircle,
   ThumbsUp,
   ThumbsDown,
+  MoreHorizontal,
+  Download,
+  ArrowRight,
+  Sparkles,
+  ArrowUpRight,
+  Clock,
+  ChevronDown,
 } from "lucide-react";
 import PreChatForm from "../widget-preview/PreChatForm";
 import ChatInterface from "../widget-preview/ChatInterface";
 import PostChatForm from "../widget-preview/PostChatForm";
 import FeedbackForm from "../widget-preview/FeedbackForm";
 
-
 interface ModernWidgetPreviewProps {
-  config: any;
+  config: {
+    appearance: any;
+    behavior: any;
+    content: any;
+    embedding: any;
+  };
   deviceType?: 'desktop' | 'tablet' | 'mobile';
   forceOpen?: boolean;
 }
 
-const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
+export const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
   config,
   deviceType = 'desktop',
   forceOpen = false,
@@ -35,18 +46,19 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
   const [currentView, setCurrentView] = useState<'pre-chat' | 'chat' | 'post-chat' | 'feedback'>(
     config.content.enablePreChatForm ? 'pre-chat' : 'chat'
   );
-  const [messages, setMessages] = useState<Array<{role: string, content: string}>>([]);
+  const [messages, setMessages] = useState<Array<{ role: string, content: string }>>([]);
   const [inputValue, setInputValue] = useState("");
   const [preChatData, setPreChatData] = useState<Record<string, any>>({});
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
-  
+  const [animateEntrance, setAnimateEntrance] = useState(false);
+
   // Initialize chat with welcome message when opened
   useEffect(() => {
     if (isOpen && currentView === 'chat' && messages.length === 0) {
       setMessages([
-        { 
-          role: 'assistant', 
-          content: config.content.welcomeMessage || 'Hello! How can I help you today?' 
+        {
+          role: 'assistant',
+          content: config.content.welcomeMessage || 'Hello! How can I help you today?'
         }
       ]);
     }
@@ -75,6 +87,17 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
     setPreChatData({});
   }, [config.content.enablePreChatForm, config.content.preChatFormFields]);
 
+  // Trigger entrance animation when widget opens
+  useEffect(() => {
+    if (isOpen) {
+      setAnimateEntrance(true);
+      const timer = setTimeout(() => {
+        setAnimateEntrance(false);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   const toggleWidget = () => {
     setIsOpen(!isOpen);
     if (isExpanded && !isOpen) {
@@ -90,24 +113,45 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
   // Handle chat message submission
   const handleSendMessage = (message: string) => {
     if (!message.trim()) return;
-    
+
     // Add user message
     const newMessages = [
       ...messages,
       { role: "user", content: message }
     ];
     setMessages(newMessages);
-    
-    // Simulate bot response after a delay
-    setTimeout(() => {
-      setMessages([
-        ...newMessages,
-        {
-          role: "assistant",
-          content: "Thank you for your message! How else can I assist you today?",
-        },
-      ]);
-    }, 1000);
+
+    // Show typing indicator if enabled
+    if (config.content.showTypingIndicator) {
+      setTimeout(() => {
+        setMessages([
+          ...newMessages,
+          { role: "typing", content: "" }
+        ]);
+
+        // Remove typing indicator and add response after 1.5s
+        setTimeout(() => {
+          setMessages([
+            ...newMessages,
+            {
+              role: "assistant",
+              content: "Thank you for your message! This is a preview response. In the actual widget, this would be a response from your AI model."
+            }
+          ]);
+        }, 1500);
+      }, 500);
+    } else {
+      // If typing indicator is disabled, show response immediately
+      setTimeout(() => {
+        setMessages([
+          ...newMessages,
+          {
+            role: "assistant",
+            content: "Thank you for your message! This is a preview response. In the actual widget, this would be a response from your AI model."
+          }
+        ]);
+      }, 500);
+    }
   };
 
   // Handle pre-chat form submission
@@ -156,11 +200,11 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
       textColor = '#1f2937',
       headerTextColor = '#ffffff',
     } = config.appearance || {};
-    
+
     if (currentView === 'pre-chat' && config.content.enablePreChatForm) {
       return (
-        <PreChatForm 
-          fields={config.content.preChatFormFields || []} 
+        <PreChatForm
+          fields={config.content.preChatFormFields || []}
           title={config.content.preChatFormTitle || 'Before we start'}
           subtitle={config.content.preChatFormSubtitle || 'Please provide the following information'}
           primaryColor={primaryColor}
@@ -169,7 +213,7 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
       );
     } else if (currentView === 'chat') {
       return (
-        <ChatInterface 
+        <ChatInterface
           messages={messages}
           onSendMessage={handleSendMessage}
           onEndChat={handleEndChat}
@@ -181,7 +225,7 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
       );
     } else if (currentView === 'post-chat') {
       return (
-        <PostChatForm 
+        <PostChatForm
           fields={config.content.postChatFormFields || []}
           title={config.content.postChatFormTitle || 'Before you go'}
           subtitle={config.content.postChatFormSubtitle || 'Please provide some feedback about your experience'}
@@ -191,7 +235,7 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
       );
     } else if (currentView === 'feedback') {
       return (
-        <FeedbackForm 
+        <FeedbackForm
           options={config.content.feedbackOptions || []}
           primaryColor={primaryColor}
           onSubmit={handleFeedbackSubmit}
@@ -199,459 +243,259 @@ const ModernWidgetPreview: React.FC<ModernWidgetPreviewProps> = ({
         />
       );
     }
-    
+
     return null;
-  }
+  };
 
   // Apply theme colors
   const primaryColor = config.appearance.primaryColor;
-  const borderRadius = `${config.appearance.borderRadius}px`;
-  const iconSize = `${config.appearance.chatIconSize}px`;
+  const secondaryColor = config.appearance.secondaryColor || "#ffffff";
+  const borderRadius = config.appearance.borderRadius || 8;
+  const iconSize = config.appearance.chatIconSize || 40;
   const fontFamily = config.appearance.fontFamily || "system-ui";
-
-  // Extract typography settings with defaults
-  const fontSize = config.appearance.fontSize || "medium";
-  const fontWeight = config.appearance.fontWeight || "normal";
   const textColor = config.appearance.textColor || "#333333";
   const headerTextColor = config.appearance.headerTextColor || "#ffffff";
-
-  // Extract layout settings with defaults
-  const headerStyle = config.appearance.headerStyle || "solid";
-  const buttonStyle = config.appearance.buttonStyle || "rounded";
   const gradientEnabled = config.appearance.gradientEnabled || false;
   const shadowIntensity = config.appearance.shadowIntensity || 2;
-  const backgroundOpacity = config.appearance.backgroundOpacity || 100;
 
-  // Font size mapping
-  const fontSizeMap = {
-    small: {
-      header: "text-xs",
-      message: "text-xs",
-      input: "text-xs",
-    },
-    medium: {
-      header: "text-sm",
-      message: "text-sm",
-      input: "text-sm",
-    },
-    large: {
-      header: "text-base",
-      message: "text-base",
-      input: "text-base",
-    }
-  };
+  // Position and animation settings
+  const position = config.behavior.position || "bottom-right";
+  const animation = config.behavior.animation || "fade";
 
-  // Font weight mapping
-  const fontWeightMap = {
-    light: "font-light",
-    normal: "font-normal",
-    medium: "font-medium",
-    semibold: "font-semibold",
-    bold: "font-bold"
-  };
-
-  // Get font classes
-  const getTypographyClasses = (element) => {
-    const size = fontSizeMap[fontSize] || fontSizeMap.medium;
-    const weight = fontWeightMap[fontWeight] || fontWeightMap.normal;
-    return `${size[element]} ${weight}`;
-  };
-
-  // Device-responsive sizing
-  const deviceSizing = {
-    desktop: {
-      widgetWidth: "w-80",
-      widgetHeight: "h-96",
-      iconSize: iconSize,
-      fontSize: "text-sm",
-      padding: "p-4",
-      gap: "gap-4",
-      position: "bottom-4 right-4"
-    },
-    tablet: {
-      widgetWidth: "w-72",
-      widgetHeight: "h-80",
-      iconSize: `${Math.max(48, parseInt(iconSize) * 1.1)}px`,
-      fontSize: "text-sm",
-      padding: "p-3",
-      gap: "gap-3",
-      position: "bottom-4 right-4"
-    },
-    mobile: {
-      widgetWidth: "w-64",
-      widgetHeight: "h-72",
-      iconSize: `${Math.max(48, parseInt(iconSize) * 1.1)}px`,
-      fontSize: "text-sm",
-      padding: "p-3",
-      gap: "gap-3",
-      position: "bottom-3 right-3"
-    }
-  };
-
-  const currentSizing = deviceSizing[deviceType];
-
-  // Adjust widget size for mobile/tablet to fit in device frame
-  const getWidgetConstraints = () => {
-    if (deviceType === 'mobile') {
-      return {
-        maxWidth: '95%',
-        maxHeight: '90%',
-        width: '320px',
-        height: '500px'
-      };
-    }
-    if (deviceType === 'tablet') {
-      return {
-        maxWidth: '90%',
-        maxHeight: '85%',
-        width: '480px',
-        height: '600px'
-      };
-    }
-    return {
-      maxWidth: '320px',
-      maxHeight: '384px',
-      width: '320px',
-      height: '384px'
-    };
-  };
-
-  const widgetConstraints = getWidgetConstraints();
-
-  // Animation classes
-  const animationClasses =
-    {
-      fade: "transition-opacity duration-300",
-      slide: "transition-transform duration-300",
-      bounce: "animate-bounce",
-      none: "",
-    }[config.behavior.animation] || "fade";
-
-  // Apply theme mode
-  const themeMode = config.appearance.theme || 'light';
-  const isDarkMode = themeMode === 'dark' || (themeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-  // Theme-aware colors
-  const backgroundColors = {
-    light: 'bg-slate-50',
-    dark: 'bg-slate-900'
-  };
-
-  const mockContentColors = {
-    light: 'bg-white',
-    dark: 'bg-slate-800'
-  };
-
-  const browserBarColors = {
-    light: 'bg-slate-200',
-    dark: 'bg-slate-700'
-  };
-
-  // Get button style classes
-  const getButtonStyleClasses = (style = buttonStyle) => {
-    switch (style) {
-      case 'pill':
-        return 'rounded-full';
-      case 'square':
-        return 'rounded-sm';
-      case 'minimal':
-        return 'rounded-md border-0 shadow-none';
-      case 'rounded':
+  // Get position styles
+  const getPositionStyles = () => {
+    switch (position) {
+      case 'bottom-right':
+        return { bottom: '20px', right: '20px' };
+      case 'bottom-left':
+        return { bottom: '20px', left: '20px' };
+      case 'top-right':
+        return { top: '20px', right: '20px' };
+      case 'top-left':
+        return { top: '20px', left: '20px' };
       default:
-        return 'rounded-md';
+        return { bottom: '20px', right: '20px' };
     }
   };
 
-  // Get header style properties
-  const getHeaderStyleProps = () => {
-    let styles: React.CSSProperties = { backgroundColor: primaryColor, fontFamily };
+  // Get entrance animation
+  const getEntranceAnimation = () => {
+    if (!animateEntrance) return '';
 
-    if (headerStyle === 'gradient') {
-      styles = {
-        ...styles,
-        backgroundImage: `linear-gradient(to right, ${primaryColor}, ${adjustColor(primaryColor, 30)})`,
-      };
-    } else if (headerStyle === 'glass') {
-      styles = {
-        ...styles,
-        backgroundColor: `${primaryColor}CC`, // Add transparency
-        backdropFilter: 'blur(10px)',
-      };
-    } else if (headerStyle === 'flat') {
-      styles = {
-        ...styles,
-        boxShadow: 'none',
-        borderBottom: '1px solid rgba(0,0,0,0.1)',
-      };
+    switch (animation) {
+      case 'slide':
+        switch (position) {
+          case 'bottom-right':
+            return 'animate-slide-in-from-right';
+          case 'bottom-left':
+            return 'animate-slide-in-from-left';
+          case 'top-right':
+            return 'animate-slide-in-from-top-right';
+          case 'top-left':
+            return 'animate-slide-in-from-top-left';
+          default:
+            return 'animate-slide-in-from-right';
+        }
+      case 'bounce':
+        return 'animate-bounce-in';
+      case 'zoom':
+        return 'animate-zoom-in';
+      case 'fade':
+      default:
+        return 'animate-fade-in';
     }
-
-    return styles;
   };
 
   // Get shadow class based on intensity
-  const getShadowClass = (intensity = shadowIntensity) => {
-    const shadowMap = {
-      0: 'shadow-none',
-      1: 'shadow-sm',
-      2: 'shadow',
-      3: 'shadow-md',
-      4: 'shadow-lg',
-      5: 'shadow-xl',
-    };
-    return shadowMap[intensity] || 'shadow';
+  const getShadowClass = () => {
+    switch (shadowIntensity) {
+      case 0: return 'shadow-none';
+      case 1: return 'shadow-sm';
+      case 2: return 'shadow-md';
+      case 3: return 'shadow-lg';
+      case 4: return 'shadow-xl';
+      case 5: return 'shadow-2xl';
+      default: return 'shadow-md';
+    }
   };
 
-  // Helper function to adjust a color's brightness
-  const adjustColor = (color, amount) => {
-    // Simple color adjustment for demo purposes
-    return color;
+  // Get background styles for gradient if enabled
+  const getBackgroundStyles = () => {
+    if (gradientEnabled) {
+      return {
+        background: `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, -20)})`,
+      };
+    }
+    return { backgroundColor: primaryColor };
+  };
+
+  // Helper to adjust color brightness
+  const adjustColor = (color: string, amount: number): string => {
+    return color; // Simplified for preview
+  };
+
+  // Button style
+  const buttonStyle = config.appearance.buttonStyle || "rounded";
+  const getButtonShape = () => {
+    switch (buttonStyle) {
+      case 'square': return '0px';
+      case 'rounded': return '8px';
+      case 'pill': return '9999px';
+      default: return '8px';
+    }
+  };
+
+  // Chat button icon style
+  const iconStyle = config.appearance.iconStyle || "default";
+  const renderChatButtonIcon = () => {
+    switch (iconStyle) {
+      case 'bubble':
+        return (
+          <div className="relative">
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+            <MessageSquare className="h-5 w-5" />
+          </div>
+        );
+      case 'wave':
+        return <span className="text-xl">👋</span>;
+      case 'bot':
+        return <Bot className="h-5 w-5" />;
+      case 'sparkle':
+        return <Sparkles className="h-5 w-5" />;
+      case 'default':
+      default:
+        return <MessageSquare className="h-5 w-5" />;
+    }
   };
 
   return (
-    <div className={cn(
-      "relative w-full h-[500px] rounded-lg border overflow-hidden transition-colors duration-300",
-      isDarkMode ? backgroundColors.dark : backgroundColors.light
-    )}>
-      {/* Mock browser frame */}
-      <div className={cn(
-        "h-8 flex items-center px-3 gap-1.5 transition-colors duration-300",
-        isDarkMode ? browserBarColors.dark : browserBarColors.light
-      )}>
-        <div className="w-3 h-3 rounded-full bg-red-400"></div>
-        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-        <div className="w-3 h-3 rounded-full bg-green-400"></div>
-        <div className={cn(
-          "ml-4 h-5 w-64 rounded-md transition-colors duration-300",
-          isDarkMode ? "bg-slate-600" : "bg-white"
-        )}></div>
-      </div>
-
-      {/* Mock website content */}
-      <div className={cn(
-        "h-[calc(100%-2rem)] relative overflow-y-auto",
-        deviceType === 'mobile' ? 'p-2' : deviceType === 'tablet' ? 'p-3' : 'p-4'
-      )}>
-        {/* Header */}
-        <div className={cn(
-          "w-full rounded-md shadow-sm mb-3 transition-colors duration-300",
-          isDarkMode ? mockContentColors.dark : mockContentColors.light,
-          deviceType === 'mobile' ? 'h-8' : deviceType === 'tablet' ? 'h-10' : 'h-12'
-        )}></div>
-
-        {/* Content Grid */}
-        <div className={cn(
-          "grid gap-3 mb-3",
-          deviceType === 'mobile' ? 'grid-cols-1' : deviceType === 'tablet' ? 'grid-cols-2' : 'grid-cols-3'
-        )}>
-          <div className={cn(
-            "rounded-md shadow-sm transition-colors duration-300",
-            isDarkMode ? mockContentColors.dark : mockContentColors.light,
-            deviceType === 'mobile' ? 'h-24' : deviceType === 'tablet' ? 'h-28' : 'h-32'
-          )}></div>
-          {deviceType !== 'mobile' && (
-            <div className={cn(
-              "rounded-md shadow-sm transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              deviceType === 'tablet' ? 'h-28' : 'h-32'
-            )}></div>
+    <div className="widget-preview" style={{ fontFamily }}>
+      {/* Chat toggle button */}
+      {!isOpen && (
+        <button
+          onClick={toggleWidget}
+          className={cn(
+            "chat-toggle-button flex items-center justify-center transition-all duration-300",
+            getShadowClass()
           )}
-          {deviceType === 'desktop' && (
-            <div className={cn(
-              "h-32 rounded-md shadow-sm transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light
-            )}></div>
-          )}
-        </div>
-
-        {/* Main Content */}
-        <div className={cn(
-          "w-full rounded-md shadow-sm mb-3 transition-colors duration-300",
-          isDarkMode ? mockContentColors.dark : mockContentColors.light,
-          deviceType === 'mobile' ? 'h-40' : deviceType === 'tablet' ? 'h-48' : 'h-64'
-        )}></div>
-
-        {/* Additional Content */}
-        <div className={cn(
-          "rounded-md shadow-sm mb-3 transition-colors duration-300",
-          isDarkMode ? mockContentColors.dark : mockContentColors.light,
-          deviceType === 'mobile' ? 'w-full h-6' : deviceType === 'tablet' ? 'w-3/4 h-7' : 'w-3/4 h-8'
-        )}></div>
-
-        <div className={cn(
-          "w-full rounded-md shadow-sm transition-colors duration-300",
-          isDarkMode ? mockContentColors.dark : mockContentColors.light,
-          deviceType === 'mobile' ? 'h-24' : deviceType === 'tablet' ? 'h-28' : 'h-32'
-        )}></div>
-
-        {/* Extra content for scrolling */}
-        {deviceType !== 'desktop' && (
-          <>
-            <div className={cn(
-              "w-full rounded-md shadow-sm mt-3 transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              deviceType === 'mobile' ? 'h-20' : 'h-24'
-            )}></div>
-            <div className={cn(
-              "w-2/3 rounded-md shadow-sm mt-3 transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              deviceType === 'mobile' ? 'h-6' : 'h-7'
-            )}></div>
-            {deviceType === 'tablet' && (
-              <>
-                <div className={cn(
-                  "w-full rounded-md shadow-sm mt-3 transition-colors duration-300",
-                  isDarkMode ? mockContentColors.dark : mockContentColors.light,
-                  'h-32'
-                )}></div>
-                <div className={cn(
-                  "w-4/5 rounded-md shadow-sm mt-3 transition-colors duration-300",
-                  isDarkMode ? mockContentColors.dark : mockContentColors.light,
-                  'h-8'
-                )}></div>
-                <div className={cn(
-                  "w-full rounded-md shadow-sm mt-3 transition-colors duration-300",
-                  isDarkMode ? mockContentColors.dark : mockContentColors.light,
-                  'h-20'
-                )}></div>
-              </>
-            )}
-          </>
-        )}
-
-        {/* Desktop extra content */}
-        {deviceType === 'desktop' && (
-          <>
-            <div className={cn(
-              "w-full rounded-md shadow-sm mt-3 transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              'h-24'
-            )}></div>
-            <div className={cn(
-              "w-3/4 rounded-md shadow-sm mt-3 transition-colors duration-300",
-              isDarkMode ? mockContentColors.dark : mockContentColors.light,
-              'h-8'
-            )}></div>
-          </>
-        )}
-      </div>
-
-      {/* Widget button */}
-      <div
-        className={cn(
-          "absolute shadow-lg cursor-pointer",
-          currentSizing.position,
-          animationClasses,
-        )}
-        onClick={toggleWidget}
-        style={{
-          fontFamily,
-          zIndex: 999,
-        }}
-      >
-        {!isOpen ? (
-          <div
-            className="rounded-full flex items-center justify-center p-3 text-white"
-            style={{
-              backgroundColor: primaryColor,
-              width: currentSizing.iconSize,
-              height: currentSizing.iconSize,
-              borderRadius:
-                config.appearance.theme === "modern" ? "12px" : "50%",
-            }}
-          >
-            <MessageSquare size={parseInt(currentSizing.iconSize) * 0.5} />
+          style={{
+            ...getPositionStyles(),
+            width: `${iconSize}px`,
+            height: `${iconSize}px`,
+            borderRadius: getButtonShape(),
+            position: 'absolute',
+            zIndex: 999,
+            border: 'none',
+            cursor: 'pointer',
+            ...getBackgroundStyles(),
+          }}
+          aria-label={config.content.chatButtonText || 'Chat with us'}
+        >
+          <div className="text-white">
+            {renderChatButtonIcon()}
           </div>
-        ) : (
+        </button>
+      )}
+
+      {/* Chat window */}
+      {isOpen && (
+        <div
+          className={cn(
+            "widget-window flex flex-col",
+            getShadowClass(),
+            getEntranceAnimation(),
+            {
+              "widget-expanded": isExpanded,
+            }
+          )}
+          style={{
+            position: 'absolute',
+            ...getPositionStyles(),
+            width: isExpanded ? '100%' : deviceType === 'mobile' ? '320px' : '380px',
+            height: isExpanded ? '100%' : deviceType === 'mobile' ? '500px' : '560px',
+            maxHeight: isExpanded ? '100%' : '80vh',
+            backgroundColor: secondaryColor,
+            borderRadius: `${borderRadius}px`,
+            overflow: 'hidden',
+            transition: 'all 0.3s ease',
+            zIndex: 9999,
+            maxWidth: isExpanded ? '100%' : '95vw',
+            color: textColor,
+          }}
+        >
+          {/* Header */}
           <div
-            className={cn(
-              "rounded-lg shadow-lg overflow-hidden flex flex-col transition-colors duration-300",
-              getShadowClass(),
-              isExpanded ? "fixed inset-4 h-auto" : "",
-              deviceType === 'mobile' && !isExpanded ? "fixed bottom-3 right-3 left-3" : "",
-              deviceType === 'tablet' && !isExpanded ? "fixed bottom-4 right-4 left-4" : "",
-              isDarkMode ? "bg-slate-800 text-white" : "bg-white text-slate-900"
-            )}
+            className="widget-header flex items-center justify-between px-4 py-3"
             style={{
-              borderRadius: deviceType === 'mobile' ? '12px' : borderRadius,
-              border: `1px solid ${primaryColor}20`,
-              width: isExpanded ? 'auto' : (deviceType === 'mobile' || deviceType === 'tablet' ? 'auto' : widgetConstraints.width),
-              height: isExpanded ? 'auto' : widgetConstraints.height,
-              maxWidth: deviceType === 'mobile' || deviceType === 'tablet' ? 'none' : widgetConstraints.maxWidth,
-              maxHeight: widgetConstraints.maxHeight,
-              opacity: backgroundOpacity / 100,
+              ...getBackgroundStyles(),
+              color: headerTextColor,
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div
-              className={cn(
-                "flex items-center justify-between",
-                deviceType === 'mobile' ? 'p-2' : deviceType === 'tablet' ? 'p-3' : 'p-4'
-              )}
-              style={getHeaderStyleProps()}
-            >
-              <div className="flex items-center gap-2">
-                {config.appearance.theme === "modern" && (
-                  <div className="bg-white bg-opacity-20 p-1.5 rounded">
-                    <MessageSquare size={16} className="text-white" />
-                  </div>
-                )}
-                <div>
-                  <h3 className={cn(
-                    "font-medium text-white",
-                    getTypographyClasses('header')
-                  )}>
-                    {config.content.headerTitle}
-                  </h3>
-                  <p className={cn(
-                    "text-white text-opacity-80",
-                    fontSize === "small" ? "text-[10px]" : "text-xs"
-                  )}>Online</p>
+            <div className="flex items-center gap-2">
+              {config.content.showAvatar && (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: adjustColor(primaryColor, 15),
+                  }}
+                >
+                  <Bot className="h-4 w-4" style={{ color: headerTextColor }} />
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={toggleExpand}
-                  className="p-1 rounded-full hover:bg-white hover:bg-opacity-10 text-white"
-                >
-                  {isExpanded ? (
-                    <Minimize2 size={14} />
-                  ) : (
-                    <Maximize2 size={14} />
-                  )}
-                </button>
-                <button
-                  onClick={toggleWidget}
-                  className="p-1 rounded-full hover:bg-white hover:bg-opacity-10 text-white"
-                >
-                  <X size={14} />
-                </button>
+              )}
+              <div>
+                <h3 className="font-medium text-sm">
+                  {config.content.headerTitle || 'Chat Support'}
+                </h3>
+                <div className="flex items-center text-xs opacity-80">
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-400 mr-1.5"></div>
+                  <span>Online</span>
+                </div>
               </div>
             </div>
 
-            {renderChatContent()}
-
-            {/* Branding */}
-            {config.appearance.theme === "modern" && (
-              <div className={cn(
-                "py-1 px-3 border-t text-center transition-colors duration-300",
-                isDarkMode
-                  ? "bg-slate-900 border-slate-600"
-                  : "bg-slate-50 border-slate-200"
-              )}>
-                <p className={cn(
-                  "text-[10px] transition-colors duration-300",
-                  isDarkMode ? "text-slate-500" : "text-slate-400"
-                )}
-                  style={{ fontFamily }}
+            <div className="flex items-center">
+              {deviceType === 'desktop' && (
+                <button
+                  onClick={toggleExpand}
+                  className="p-1.5 hover:bg-black/10 rounded-full mr-1 transition-colors"
+                  aria-label={isExpanded ? 'Minimize' : 'Maximize'}
                 >
-                  Powered by ChatAdmin
-                </p>
-              </div>
-            )}
+                  {isExpanded ? (
+                    <Minimize2 className="h-4 w-4" style={{ color: headerTextColor }} />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" style={{ color: headerTextColor }} />
+                  )}
+                </button>
+              )}
+
+              <button
+                onClick={toggleWidget}
+                className="p-1.5 hover:bg-black/10 rounded-full transition-colors"
+                aria-label="Close chat"
+              >
+                <X className="h-4 w-4" style={{ color: headerTextColor }} />
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Content area */}
+          <div className="flex-1 overflow-hidden">
+            {renderChatContent()}
+          </div>
+
+          {/* Powered by footer */}
+          {config.embedding.showBranding !== false && (
+            <div
+              className="py-1.5 px-3 text-[10px] opacity-60 flex items-center justify-center border-t"
+              style={{
+                borderColor: 'rgba(0,0,0,0.1)',
+              }}
+            >
+              Powered by <span className="font-semibold ml-1">AI Insight</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

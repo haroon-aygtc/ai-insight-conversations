@@ -64,13 +64,24 @@ const Metric = ({ label, value, max, unit, status }: MetricProps) => {
   );
 };
 
+type MetricStatus = "good" | "warning" | "critical";
+
+type MetricsState = {
+  loadTime: { value: number; max: number; status: MetricStatus };
+  renderTime: { value: number; max: number; status: MetricStatus };
+  memoryUsage: { value: number; max: number; status: MetricStatus };
+  networkRequests: { value: number; max: number; status: MetricStatus };
+};
+
 export const PerformanceMetrics = ({ previewUrl }: { previewUrl?: string }) => {
-  const [metrics, setMetrics] = useState({
-    loadTime: { value: 0, max: 2000, status: "good" as const },
-    renderTime: { value: 0, max: 100, status: "good" as const },
-    memoryUsage: { value: 0, max: 50, status: "good" as const },
-    networkRequests: { value: 0, max: 10, status: "good" as const },
+  const [metrics, setMetrics] = useState<MetricsState>({
+    loadTime: { value: 0, max: 2000, status: "good" },
+    renderTime: { value: 0, max: 100, status: "good" },
+    memoryUsage: { value: 0, max: 50, status: "good" },
+    networkRequests: { value: 0, max: 10, status: "good" },
   });
+
+  const [activeTab, setActiveTab] = useState("metrics");
 
   useEffect(() => {
     // Simulate metrics calculation when preview URL changes
@@ -126,7 +137,7 @@ export const PerformanceMetrics = ({ previewUrl }: { previewUrl?: string }) => {
         <CardDescription>Monitor your widget's performance</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="metrics">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
             <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
