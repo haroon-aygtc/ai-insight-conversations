@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,11 +7,36 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, Edit, Plus, Trash2, X, MessageSquare, ThumbsUp, ThumbsDown, Settings, Move, GripHorizontal, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  AlertCircle,
+  Edit,
+  Plus,
+  Trash2,
+  X,
+  MessageSquare,
+  ThumbsUp,
+  ThumbsDown,
+  Settings,
+  Move,
+  GripHorizontal,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PreChatField {
@@ -55,61 +80,81 @@ interface WidgetContentTabProps {
   onChange: (key: string, value: any) => void;
 }
 
-export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onChange }) => {
-  const [activePreChatField, setActivePreChatField] = useState<string | null>(null);
-  const [activeFeedbackOption, setActiveFeedbackOption] = useState<string | null>(null);
+export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({
+  config,
+  onChange,
+}) => {
+  const [activePreChatField, setActivePreChatField] = useState<string | null>(
+    null,
+  );
+  const [activeFeedbackOption, setActiveFeedbackOption] = useState<
+    string | null
+  >(null);
 
   // Initialize default fields if not already present
   React.useEffect(() => {
     if (!config.preChatFormFields || !Array.isArray(config.preChatFormFields)) {
       // Convert old format to new format if necessary
-      if (Array.isArray(config.preChatFormFields) && typeof config.preChatFormFields[0] === 'string') {
-        const convertedFields = (config.preChatFormFields as unknown as string[]).map(fieldName => ({
+      if (
+        Array.isArray(config.preChatFormFields) &&
+        typeof config.preChatFormFields[0] === "string"
+      ) {
+        const convertedFields = (
+          config.preChatFormFields as unknown as string[]
+        ).map((fieldName) => ({
           id: `field-${fieldName}`,
           label: fieldName.charAt(0).toUpperCase() + fieldName.slice(1),
-          type: fieldName === 'message' ? 'textarea' : fieldName === 'email' ? 'email' : 'text',
+          type:
+            fieldName === "message"
+              ? "textarea"
+              : fieldName === "email"
+                ? "email"
+                : "text",
           placeholder: `Enter your ${fieldName}`,
-          required: config.preChatFormRequired || false
+          required: config.preChatFormRequired || false,
         }));
-        onChange('preChatFormFields', convertedFields);
+        onChange("preChatFormFields", convertedFields);
       } else {
         // Set default fields
-        onChange('preChatFormFields', [
+        onChange("preChatFormFields", [
           {
-            id: 'field-name',
-            label: 'Name',
-            type: 'text',
-            placeholder: 'Enter your name',
-            required: true
+            id: "field-name",
+            label: "Name",
+            type: "text",
+            placeholder: "Enter your name",
+            required: true,
           },
           {
-            id: 'field-email',
-            label: 'Email',
-            type: 'email',
-            placeholder: 'Enter your email',
-            required: true
-          }
+            id: "field-email",
+            label: "Email",
+            type: "email",
+            placeholder: "Enter your email",
+            required: true,
+          },
         ]);
       }
     }
 
     if (!config.feedbackOptions) {
-      onChange('feedbackOptions', [
+      onChange("feedbackOptions", [
         {
-          id: 'feedback-helpful',
-          type: 'thumbs',
-          question: 'Was this helpful?',
-          required: true
-        }
+          id: "feedback-helpful",
+          type: "thumbs",
+          question: "Was this helpful?",
+          required: true,
+        },
       ]);
     }
 
     if (config.preChatFormTitle === undefined) {
-      onChange('preChatFormTitle', 'Before we start chatting...');
+      onChange("preChatFormTitle", "Before we start chatting...");
     }
 
     if (config.preChatFormSubtitle === undefined) {
-      onChange('preChatFormSubtitle', 'Please provide the following information:');
+      onChange(
+        "preChatFormSubtitle",
+        "Please provide the following information:",
+      );
     }
   }, []);
 
@@ -117,27 +162,27 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
   const addPreChatField = () => {
     const newField: PreChatField = {
       id: `field-${Date.now()}`,
-      label: 'New Field',
-      type: 'text',
-      placeholder: 'Enter value',
-      required: false
+      label: "New Field",
+      type: "text",
+      placeholder: "Enter value",
+      required: false,
     };
 
     const updatedFields = [...(config.preChatFormFields || []), newField];
-    onChange('preChatFormFields', updatedFields);
+    onChange("preChatFormFields", updatedFields);
     setActivePreChatField(newField.id);
   };
 
   const updatePreChatField = (id: string, field: Partial<PreChatField>) => {
-    const updatedFields = config.preChatFormFields.map(f =>
-      f.id === id ? { ...f, ...field } : f
+    const updatedFields = config.preChatFormFields.map((f) =>
+      f.id === id ? { ...f, ...field } : f,
     );
-    onChange('preChatFormFields', updatedFields);
+    onChange("preChatFormFields", updatedFields);
   };
 
   const removePreChatField = (id: string) => {
-    const updatedFields = config.preChatFormFields.filter(f => f.id !== id);
-    onChange('preChatFormFields', updatedFields);
+    const updatedFields = config.preChatFormFields.filter((f) => f.id !== id);
+    onChange("preChatFormFields", updatedFields);
     if (activePreChatField === id) {
       setActivePreChatField(null);
     }
@@ -147,26 +192,29 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
   const addFeedbackOption = () => {
     const newOption: FeedbackOption = {
       id: `feedback-${Date.now()}`,
-      type: 'thumbs',
-      question: 'How was your experience?',
-      required: true
+      type: "thumbs",
+      question: "How was your experience?",
+      required: true,
     };
 
     const updatedOptions = [...(config.feedbackOptions || []), newOption];
-    onChange('feedbackOptions', updatedOptions);
+    onChange("feedbackOptions", updatedOptions);
     setActiveFeedbackOption(newOption.id);
   };
 
-  const updateFeedbackOption = (id: string, option: Partial<FeedbackOption>) => {
-    const updatedOptions = config.feedbackOptions.map(o =>
-      o.id === id ? { ...o, ...option } : o
+  const updateFeedbackOption = (
+    id: string,
+    option: Partial<FeedbackOption>,
+  ) => {
+    const updatedOptions = config.feedbackOptions.map((o) =>
+      o.id === id ? { ...o, ...option } : o,
     );
-    onChange('feedbackOptions', updatedOptions);
+    onChange("feedbackOptions", updatedOptions);
   };
 
   const removeFeedbackOption = (id: string) => {
-    const updatedOptions = config.feedbackOptions.filter(o => o.id !== id);
-    onChange('feedbackOptions', updatedOptions);
+    const updatedOptions = config.feedbackOptions.filter((o) => o.id !== id);
+    onChange("feedbackOptions", updatedOptions);
     if (activeFeedbackOption === id) {
       setActiveFeedbackOption(null);
     }
@@ -174,9 +222,14 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-semibold mb-2">Chat Content</h3>
-        <p className="text-sm text-slate-500 mb-4">Configure messages and content settings</p>
+      <div className="bg-gradient-to-r from-slate-50 to-white p-4 rounded-lg border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <MessageSquare className="h-5 w-5 text-primary" />
+          <h3 className="text-xl font-semibold">Chat Content</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Configure messages and content settings
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -186,10 +239,12 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Textarea
               placeholder="Enter welcome message"
               value={config.welcomeMessage}
-              onChange={(e) => onChange('welcomeMessage', e.target.value)}
+              onChange={(e) => onChange("welcomeMessage", e.target.value)}
               className="min-h-[100px] bg-background text-foreground border-border placeholder:text-muted-foreground"
             />
-            <p className="text-xs text-muted-foreground mt-1">First message shown to your visitors</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              First message shown to your visitors
+            </p>
           </div>
 
           <div>
@@ -197,10 +252,12 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Input
               placeholder="Enter placeholder text"
               value={config.inputPlaceholder}
-              onChange={(e) => onChange('inputPlaceholder', e.target.value)}
+              onChange={(e) => onChange("inputPlaceholder", e.target.value)}
               className="bg-background text-foreground border-border placeholder:text-muted-foreground"
             />
-            <p className="text-xs text-muted-foreground mt-1">Text shown in the chat input field</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Text shown in the chat input field
+            </p>
           </div>
 
           {/* Pre-Chat Form Section - Enhanced */}
@@ -213,7 +270,9 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                 </CardTitle>
                 <Switch
                   checked={config.enablePreChatForm}
-                  onCheckedChange={(checked) => onChange('enablePreChatForm', checked)}
+                  onCheckedChange={(checked) =>
+                    onChange("enablePreChatForm", checked)
+                  }
                 />
               </div>
             </CardHeader>
@@ -225,8 +284,10 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                   <div>
                     <Label className="mb-1 block text-sm">Form Title</Label>
                     <Input
-                      value={config.preChatFormTitle || ''}
-                      onChange={(e) => onChange('preChatFormTitle', e.target.value)}
+                      value={config.preChatFormTitle || ""}
+                      onChange={(e) =>
+                        onChange("preChatFormTitle", e.target.value)
+                      }
                       placeholder="Enter form title"
                       className="bg-background text-foreground"
                     />
@@ -234,8 +295,10 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                   <div>
                     <Label className="mb-1 block text-sm">Form Subtitle</Label>
                     <Input
-                      value={config.preChatFormSubtitle || ''}
-                      onChange={(e) => onChange('preChatFormSubtitle', e.target.value)}
+                      value={config.preChatFormSubtitle || ""}
+                      onChange={(e) =>
+                        onChange("preChatFormSubtitle", e.target.value)
+                      }
                       placeholder="Enter form subtitle"
                       className="bg-background text-foreground"
                     />
@@ -268,14 +331,16 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                           "border rounded-md p-3 transition-all",
                           activePreChatField === field.id
                             ? "border-primary bg-primary/5"
-                            : "hover:border-muted-foreground/20"
+                            : "hover:border-muted-foreground/20",
                         )}
                       >
                         <div
                           className="flex items-center justify-between cursor-pointer"
-                          onClick={() => setActivePreChatField(
-                            activePreChatField === field.id ? null : field.id
-                          )}
+                          onClick={() =>
+                            setActivePreChatField(
+                              activePreChatField === field.id ? null : field.id,
+                            )
+                          }
                         >
                           <div className="flex items-center gap-2">
                             <div className="text-muted-foreground">
@@ -289,11 +354,16 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                               <GripHorizontal className="h-4 w-4" />
                             </div>
                             <div>
-                              <div className="font-medium text-sm">{field.label}</div>
+                              <div className="font-medium text-sm">
+                                {field.label}
+                              </div>
                               <div className="text-xs text-muted-foreground flex items-center gap-1">
                                 <span className="capitalize">{field.type}</span>
                                 {field.required && (
-                                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] px-1 py-0 h-4"
+                                  >
                                     Required
                                   </Badge>
                                 )}
@@ -323,20 +393,32 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                           >
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <Label className="mb-1 block text-xs">Field Label</Label>
+                                <Label className="mb-1 block text-xs">
+                                  Field Label
+                                </Label>
                                 <Input
                                   value={field.label}
-                                  onChange={(e) => updatePreChatField(field.id, { label: e.target.value })}
+                                  onChange={(e) =>
+                                    updatePreChatField(field.id, {
+                                      label: e.target.value,
+                                    })
+                                  }
                                   placeholder="Field Label"
                                   className="h-8 text-sm"
                                   onClick={(e) => e.stopPropagation()}
                                 />
                               </div>
                               <div>
-                                <Label className="mb-1 block text-xs">Field Type</Label>
+                                <Label className="mb-1 block text-xs">
+                                  Field Type
+                                </Label>
                                 <Select
                                   value={field.type}
-                                  onValueChange={(value) => updatePreChatField(field.id, { type: value })}
+                                  onValueChange={(value) =>
+                                    updatePreChatField(field.id, {
+                                      type: value,
+                                    })
+                                  }
                                 >
                                   <SelectTrigger
                                     className="h-8 text-sm"
@@ -348,32 +430,49 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                                     <SelectItem value="text">Text</SelectItem>
                                     <SelectItem value="email">Email</SelectItem>
                                     <SelectItem value="tel">Phone</SelectItem>
-                                    <SelectItem value="textarea">Textarea</SelectItem>
-                                    <SelectItem value="select">Dropdown</SelectItem>
+                                    <SelectItem value="textarea">
+                                      Textarea
+                                    </SelectItem>
+                                    <SelectItem value="select">
+                                      Dropdown
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                             </div>
 
                             <div>
-                              <Label className="mb-1 block text-xs">Placeholder</Label>
+                              <Label className="mb-1 block text-xs">
+                                Placeholder
+                              </Label>
                               <Input
                                 value={field.placeholder}
-                                onChange={(e) => updatePreChatField(field.id, { placeholder: e.target.value })}
+                                onChange={(e) =>
+                                  updatePreChatField(field.id, {
+                                    placeholder: e.target.value,
+                                  })
+                                }
                                 placeholder="Placeholder text"
                                 className="h-8 text-sm"
                                 onClick={(e) => e.stopPropagation()}
                               />
                             </div>
 
-                            {field.type === 'select' && (
+                            {field.type === "select" && (
                               <div>
-                                <Label className="mb-1 block text-xs">Options (comma separated)</Label>
+                                <Label className="mb-1 block text-xs">
+                                  Options (comma separated)
+                                </Label>
                                 <Input
-                                  value={field.options?.join(', ') || ''}
-                                  onChange={(e) => updatePreChatField(field.id, {
-                                    options: e.target.value.split(',').map(o => o.trim()).filter(Boolean)
-                                  })}
+                                  value={field.options?.join(", ") || ""}
+                                  onChange={(e) =>
+                                    updatePreChatField(field.id, {
+                                      options: e.target.value
+                                        .split(",")
+                                        .map((o) => o.trim())
+                                        .filter(Boolean),
+                                    })
+                                  }
                                   placeholder="Option 1, Option 2, Option 3"
                                   className="h-8 text-sm"
                                   onClick={(e) => e.stopPropagation()}
@@ -388,9 +487,16 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                               <Checkbox
                                 id={`required-${field.id}`}
                                 checked={field.required}
-                                onCheckedChange={(checked) => updatePreChatField(field.id, { required: !!checked })}
+                                onCheckedChange={(checked) =>
+                                  updatePreChatField(field.id, {
+                                    required: !!checked,
+                                  })
+                                }
                               />
-                              <Label htmlFor={`required-${field.id}`} className="ml-2 text-xs">
+                              <Label
+                                htmlFor={`required-${field.id}`}
+                                className="ml-2 text-xs"
+                              >
                                 Required field
                               </Label>
                             </div>
@@ -422,7 +528,7 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Checkbox
               id="show-timestamp"
               checked={config.showTimestamps || false}
-              onCheckedChange={(checked) => onChange('showTimestamps', checked)}
+              onCheckedChange={(checked) => onChange("showTimestamps", checked)}
             />
             <Label htmlFor="show-timestamp">Show message timestamps</Label>
           </div>
@@ -431,7 +537,9 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Checkbox
               id="enable-attachments"
               checked={config.enableAttachments || false}
-              onCheckedChange={(checked) => onChange('enableAttachments', checked)}
+              onCheckedChange={(checked) =>
+                onChange("enableAttachments", checked)
+              }
             />
             <Label htmlFor="enable-attachments">Allow file attachments</Label>
           </div>
@@ -443,10 +551,12 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Input
               placeholder="Enter bot name"
               value={config.botName}
-              onChange={(e) => onChange('botName', e.target.value)}
+              onChange={(e) => onChange("botName", e.target.value)}
               className="bg-background text-foreground border-border placeholder:text-muted-foreground"
             />
-            <p className="text-xs text-muted-foreground mt-1">Name displayed for the chat assistant</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Name displayed for the chat assistant
+            </p>
           </div>
 
           <div>
@@ -454,10 +564,12 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Input
               placeholder="Enter button text"
               value={config.chatButtonText}
-              onChange={(e) => onChange('chatButtonText', e.target.value)}
+              onChange={(e) => onChange("chatButtonText", e.target.value)}
               className="bg-background text-foreground border-border placeholder:text-muted-foreground"
             />
-            <p className="text-xs text-muted-foreground mt-1">Text shown on the chat button</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Text shown on the chat button
+            </p>
           </div>
 
           <div>
@@ -465,10 +577,12 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Input
               placeholder="Enter header title"
               value={config.headerTitle}
-              onChange={(e) => onChange('headerTitle', e.target.value)}
+              onChange={(e) => onChange("headerTitle", e.target.value)}
               className="bg-background text-foreground border-border placeholder:text-muted-foreground"
             />
-            <p className="text-xs text-muted-foreground mt-1">Title shown in the chat header</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Title shown in the chat header
+            </p>
           </div>
 
           {/* Feedback System - Enhanced */}
@@ -481,7 +595,9 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                 </CardTitle>
                 <Switch
                   checked={config.enableFeedback}
-                  onCheckedChange={(checked) => onChange('enableFeedback', checked)}
+                  onCheckedChange={(checked) =>
+                    onChange("enableFeedback", checked)
+                  }
                 />
               </div>
             </CardHeader>
@@ -489,23 +605,33 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             {config.enableFeedback && (
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-sm mb-2 block">Feedback Position</Label>
+                  <Label className="text-sm mb-2 block">
+                    Feedback Position
+                  </Label>
                   <RadioGroup
                     value={config.feedbackPosition}
-                    onValueChange={(value) => onChange('feedbackPosition', value)}
+                    onValueChange={(value) =>
+                      onChange("feedbackPosition", value)
+                    }
                     className="space-y-1"
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="after-bot" id="after-bot" />
-                      <Label htmlFor="after-bot" className="text-sm">After bot messages</Label>
+                      <Label htmlFor="after-bot" className="text-sm">
+                        After bot messages
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="end-chat" id="end-chat" />
-                      <Label htmlFor="end-chat" className="text-sm">At end of chat</Label>
+                      <Label htmlFor="end-chat" className="text-sm">
+                        At end of chat
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="floating" id="floating" />
-                      <Label htmlFor="floating" className="text-sm">Floating button</Label>
+                      <Label htmlFor="floating" className="text-sm">
+                        Floating button
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -536,14 +662,18 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                           "border rounded-md p-3 transition-all",
                           activeFeedbackOption === option.id
                             ? "border-primary bg-primary/5"
-                            : "hover:border-muted-foreground/20"
+                            : "hover:border-muted-foreground/20",
                         )}
                       >
                         <div
                           className="flex items-center justify-between cursor-pointer"
-                          onClick={() => setActiveFeedbackOption(
-                            activeFeedbackOption === option.id ? null : option.id
-                          )}
+                          onClick={() =>
+                            setActiveFeedbackOption(
+                              activeFeedbackOption === option.id
+                                ? null
+                                : option.id,
+                            )
+                          }
                         >
                           <div className="flex items-center gap-2">
                             <div className="text-muted-foreground">
@@ -557,11 +687,18 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                               <GripHorizontal className="h-4 w-4" />
                             </div>
                             <div>
-                              <div className="font-medium text-sm">{option.question}</div>
+                              <div className="font-medium text-sm">
+                                {option.question}
+                              </div>
                               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                <span className="capitalize">{option.type} feedback</span>
+                                <span className="capitalize">
+                                  {option.type} feedback
+                                </span>
                                 {option.required && (
-                                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] px-1 py-0 h-4"
+                                  >
                                     Required
                                   </Badge>
                                 )}
@@ -590,10 +727,16 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div>
-                              <Label className="mb-1 block text-xs">Question</Label>
+                              <Label className="mb-1 block text-xs">
+                                Question
+                              </Label>
                               <Input
                                 value={option.question}
-                                onChange={(e) => updateFeedbackOption(option.id, { question: e.target.value })}
+                                onChange={(e) =>
+                                  updateFeedbackOption(option.id, {
+                                    question: e.target.value,
+                                  })
+                                }
                                 placeholder="Feedback question"
                                 className="h-8 text-sm"
                                 onClick={(e) => e.stopPropagation()}
@@ -601,10 +744,16 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                             </div>
 
                             <div>
-                              <Label className="mb-1 block text-xs">Feedback Type</Label>
+                              <Label className="mb-1 block text-xs">
+                                Feedback Type
+                              </Label>
                               <Select
                                 value={option.type}
-                                onValueChange={(value) => updateFeedbackOption(option.id, { type: value })}
+                                onValueChange={(value) =>
+                                  updateFeedbackOption(option.id, {
+                                    type: value,
+                                  })
+                                }
                               >
                                 <SelectTrigger
                                   className="h-8 text-sm"
@@ -613,22 +762,37 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="thumbs">Thumbs Up/Down</SelectItem>
-                                  <SelectItem value="stars">Star Rating</SelectItem>
-                                  <SelectItem value="emoji">Emoji Reaction</SelectItem>
-                                  <SelectItem value="custom">Custom Options</SelectItem>
+                                  <SelectItem value="thumbs">
+                                    Thumbs Up/Down
+                                  </SelectItem>
+                                  <SelectItem value="stars">
+                                    Star Rating
+                                  </SelectItem>
+                                  <SelectItem value="emoji">
+                                    Emoji Reaction
+                                  </SelectItem>
+                                  <SelectItem value="custom">
+                                    Custom Options
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
 
-                            {option.type === 'custom' && (
+                            {option.type === "custom" && (
                               <div>
-                                <Label className="mb-1 block text-xs">Options (comma separated)</Label>
+                                <Label className="mb-1 block text-xs">
+                                  Options (comma separated)
+                                </Label>
                                 <Input
-                                  value={option.options?.join(', ') || ''}
-                                  onChange={(e) => updateFeedbackOption(option.id, {
-                                    options: e.target.value.split(',').map(o => o.trim()).filter(Boolean)
-                                  })}
+                                  value={option.options?.join(", ") || ""}
+                                  onChange={(e) =>
+                                    updateFeedbackOption(option.id, {
+                                      options: e.target.value
+                                        .split(",")
+                                        .map((o) => o.trim())
+                                        .filter(Boolean),
+                                    })
+                                  }
                                   placeholder="Good, Neutral, Bad"
                                   className="h-8 text-sm"
                                   onClick={(e) => e.stopPropagation()}
@@ -643,9 +807,16 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
                               <Checkbox
                                 id={`required-${option.id}`}
                                 checked={option.required}
-                                onCheckedChange={(checked) => updateFeedbackOption(option.id, { required: !!checked })}
+                                onCheckedChange={(checked) =>
+                                  updateFeedbackOption(option.id, {
+                                    required: !!checked,
+                                  })
+                                }
                               />
-                              <Label htmlFor={`required-${option.id}`} className="ml-2 text-xs">
+                              <Label
+                                htmlFor={`required-${option.id}`}
+                                className="ml-2 text-xs"
+                              >
                                 Required feedback
                               </Label>
                             </div>
@@ -677,7 +848,7 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Checkbox
               id="show-avatar"
               checked={config.showAvatar !== false}
-              onCheckedChange={(checked) => onChange('showAvatar', checked)}
+              onCheckedChange={(checked) => onChange("showAvatar", checked)}
             />
             <Label htmlFor="show-avatar">Show bot avatar</Label>
           </div>
@@ -686,7 +857,9 @@ export const WidgetContentTab: React.FC<WidgetContentTabProps> = ({ config, onCh
             <Checkbox
               id="typing-indicator"
               checked={config.showTypingIndicator !== false}
-              onCheckedChange={(checked) => onChange('showTypingIndicator', checked)}
+              onCheckedChange={(checked) =>
+                onChange("showTypingIndicator", checked)
+              }
             />
             <Label htmlFor="typing-indicator">Show typing indicator</Label>
           </div>

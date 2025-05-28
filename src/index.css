@@ -115,30 +115,29 @@
 }
 
 @layer utilities {
-
   /* Natural color utilities based on user preferences */
   .bg-natural-primary {
-    background-color: #526D82;
+    background-color: #526d82;
   }
 
   .bg-natural-secondary {
-    background-color: #27374D;
+    background-color: #27374d;
   }
 
   .text-natural-primary {
-    color: #526D82;
+    color: #526d82;
   }
 
   .text-natural-secondary {
-    color: #27374D;
+    color: #27374d;
   }
 
   .border-natural-primary {
-    border-color: #526D82;
+    border-color: #526d82;
   }
 
   .border-natural-secondary {
-    border-color: #27374D;
+    border-color: #27374d;
   }
 
   /* Light variations for professional appearance */
@@ -148,5 +147,35 @@
 
   .bg-natural-muted {
     background-color: #f1f3f6;
+  }
+
+  /* Modern UI utilities */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .glass-effect-dark {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(30, 41, 59, 0.18);
+  }
+
+  .shadow-soft {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+  }
+
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-image: linear-gradient(
+      to right,
+      var(--primary),
+      var(--primary-foreground)
+    );
   }
 }
